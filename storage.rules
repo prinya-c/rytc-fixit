@@ -11,12 +11,21 @@ rules_version = '2';
 // what is actually live, restored after an accidental deploy from this repo
 // overwrote them on 2026-08-30.
 //
-// `join-rytc/` and `users/` are also live paths in this bucket but their
-// source rules have not been located yet (not tracked in any repo found so
-// far) — they are intentionally left OUT of the explicit matches below, so
-// the catch-all `allow read, write: if false` denies them for now rather
-// than guessing at their intended access policy. Restore their real rules
-// here as soon as they're found, then redeploy.
+// `join-rytc/` is owned by prinya-c/rytc-join, which never committed a
+// storage.rules file (rules were set directly in Console, not tracked in
+// git) — so the block below is a RECONSTRUCTION, not a verified original.
+// It's inferred from src/services/firebaseStorageService.js in that repo:
+// uploads happen from an unauthenticated public form (no Firebase Auth in
+// that app at all) restricted client-side to images ≤ 5MB. The rule below
+// enforces the same limits server-side rather than leaving write wide open.
+// ⚠️ Confirm the join-rytc upload form still works after deploying this,
+// since this couldn't be verified against the original text.
+//
+// `users/` is still unidentified — no repo checked so far references it.
+// Left OUT of the explicit matches below, so the catch-all
+// `allow read, write: if false` denies it for now rather than guessing at
+// its access policy. Restore its real rule here once its owning app is
+// found, then redeploy.
 service firebase.storage {
   match /b/{bucket}/o {
     // --- prinya-c/rytc-care-plus ---
@@ -46,6 +55,14 @@ service firebase.storage {
       allow create, update: if request.resource.size < 10 * 1024 * 1024
         && request.resource.contentType.matches('image/.*');
       allow delete: if true;
+    }
+
+    // --- prinya-c/rytc-join (reconstructed, see comment above) ---
+
+    match /join-rytc/{allPaths=**} {
+      allow read: if true;
+      allow write: if request.resource.size < 5 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*');
     }
 
     // --- prinya-c/rytc-fixit (this app) ---
