@@ -11,18 +11,10 @@ rules_version = '2';
 // what is actually live, restored after an accidental deploy from this repo
 // overwrote them on 2026-08-30.
 //
-// `join-rytc/` is owned by prinya-c/rytc-join, which never committed a
-// storage.rules file (rules were set directly in Console, not tracked in
-// git) — so the block below is a RECONSTRUCTION, not a verified original.
-// It's inferred from src/services/firebaseStorageService.js in that repo:
-// uploads happen from an unauthenticated public form (no Firebase Auth in
-// that app at all) restricted client-side to images ≤ 5MB. The rule below
-// enforces the same limits server-side rather than leaving write wide open.
-// ⚠️ Confirm the join-rytc upload form still works after deploying this,
-// since this couldn't be verified against the original text.
-//
-// The `users/{uid}/avatar.jpg` block below is copied verbatim from
-// prinya-c/rytc-pay's own storage.rules (that repo owns this path).
+// `join-rytc/` and `users/{uid}/avatar.jpg` below are the verified original
+// rules, recovered from Firebase Console's rules history directly (not a
+// guess) — join-rytc requires request.auth != null on write, which the
+// earlier reconstruction here got wrong by omitting.
 service firebase.storage {
   match /b/{bucket}/o {
     // --- prinya-c/rytc-care-plus ---
@@ -54,12 +46,14 @@ service firebase.storage {
       allow delete: if true;
     }
 
-    // --- prinya-c/rytc-join (reconstructed, see comment above) ---
+    // --- prinya-c/rytc-join ---
 
-    match /join-rytc/{allPaths=**} {
+    // RYTC public content images — public read, staff-authenticated write
+    match /join-rytc/{fileName} {
       allow read: if true;
-      allow write: if request.resource.size < 5 * 1024 * 1024
-        && request.resource.contentType.matches('image/.*');
+      allow write: if request.auth != null
+                   && request.resource.size < 5 * 1024 * 1024
+                   && request.resource.contentType.matches('image/.*');
     }
 
     // --- prinya-c/rytc-pay ---
