@@ -1,0 +1,142 @@
+import { useEffect, useState } from 'react'
+import { useNavigate, useParams } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext'
+import { changeRepairStatus, subscribeRepair } from '../lib/repairs'
+import { STATUSES, UNREPAIRABLE_REASONS, suggestRepairStatus } from '../lib/options'
+
+const inputClass =
+  'w-full rounded-md border border-slate-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary'
+
+function defaultNextStatus(repair) {
+  if (repair.status === 3) return suggestRepairStatus(repair.item)
+  return Math.min(repair.status + 1, 8)
+}
+
+export default function RepairStatus() {
+  const { id } = useParams()
+  const { user, staffProfile } = useAuth()
+  const navigate = useNavigate()
+
+  const [repair, setRepair] = useState(undefined)
+  const [nextStatus, setNextStatus] = useState('')
+  const [note, setNote] = useState('')
+  const [unrepairable, setUnrepairable] = useState(false)
+  const [reason, setReason] = useState(UNREPAIRABLE_REASONS[0])
+  const [reasonNote, setReasonNote] = useState('')
+  const [error, setError] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+
+  useEffect(() => {
+    const unsub = subscribeRepair(id, (data) => {
+      setRepair(data)
+      if (data) {
+        setNextStatus(defaultNextStatus(data))
+        setUnrepairable(!!data.unrepairable)
+        if (data.unrepairableReason) setReason(data.unrepairableReason)
+      }
+    })
+    return unsub
+  }, [id])
+
+  if (repair === undefined) return <p className="text-center text-slate-400 py-10">กำลังโหลด...</p>
+  if (repair === null) return <p className="text-center text-danger py-10">ไม่พบรายการนี้</p>
+
+  async function handleSubmit(e) {
+    e.preventDefault()
+    setError('')
+    setSubmitting(true)
+    try {
+      await changeRepairStatus(id, {
+        newStatus: Number(nextStatus),
+        note,
+        unrepairable,
+        unrepairableReason: unrepairable ? reason : null,
+        unrepairableNote: unrepairable ? reasonNote : null,
+        staffUid: user.uid,
+        staffName: staffProfile.fullName,
+      })
+      navigate(`/repairs/${id}`)
+    } catch (err) {
+      setError(err.message || 'บันทึกไม่สำเร็จ')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  return (
+    <div className="max-w-2xl mx-auto px-4 py-6 space-y-5">
+      <h1 className="text-xl font-bold text-slate-800">อัปเดตสถานะงานซ่อม</h1>
+      <p className="text-sm text-slate-500">
+        {repair.requester?.fullName} · สถานะปัจจุบัน: {repair.status}. {repair.statusLabel}
+      </p>
+
+      <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow-sm border border-orange-100 p-5 space-y-4">
+        {error && (
+          <p className="text-sm text-danger bg-red-50 border border-red-200 rounded-md px-3 py-2">{error}</p>
+        )}
+
+        <div>
+          <label className="block text-sm font-medium text-slate-700 mb-1">สถานะใหม่</label>
+          <select value={nextStatus} onChange={(e) => setNextStatus(e.target.value)} className={inputClass}>
+            {STATUSES.map((s) => (
+              <option key={s.code} value={s.code}>
+                {s.code}. {s.label}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-slate-700 mb-1">บันทึกเพิ่มเติม</label>
+          <textarea rows={2} value={note} onChange={(e) => setNote(e.target.value)} className={inputClass} />
+        </div>
+
+        <label className="flex items-center gap-2 text-sm text-slate-700">
+          <input
+            type="checkbox"
+            checked={unrepairable}
+            onChange={(e) => setUnrepairable(e.target.checked)}
+            className="h-4 w-4"
+          />
+          ไม่สามารถซ่อมได้
+        </label>
+
+        {unrepairable && (
+          <div className="space-y-3 rounded-md bg-red-50 border border-red-200 p-3">
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">เหตุผลที่ซ่อมไม่ได้</label>
+              <select value={reason} onChange={(e) => setReason(e.target.value)} className={inputClass}>
+                {UNREPAIRABLE_REASONS.map((r) => (
+                  <option key={r} value={r}>
+                    {r}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">รายละเอียดเพิ่มเติม</label>
+              <input value={reasonNote} onChange={(e) => setReasonNote(e.target.value)} className={inputClass} />
+            </div>
+          </div>
+        )}
+
+        <div className="flex gap-3">
+          <button
+            type="submit"
+            disabled={submitting}
+            className="flex-1 bg-primary hover:bg-primary-hover text-white rounded-md py-2.5 font-medium disabled:opacity-60"
+          >
+            {submitting ? 'กำลังบันทึก...' : 'บันทึก'}
+          </button>
+          <button
+            type="button"
+            onClick={() => navigate(`/repairs/${id}`)}
+            className="rounded-md border border-slate-300 px-5 py-2.5 text-slate-600 hover:bg-slate-50"
+          >
+            ยกเลิก
+          </button>
+        </div>
+      </form>
+    </div>
+  )
+}

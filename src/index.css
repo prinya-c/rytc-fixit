@@ -1,0 +1,41 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #f5821f;
+  --color-primary-hover: #d96e10;
+  --color-primary-light: #fff2e6;
+  --color-accent: #1e3a8a;
+  --color-warning: #ffc107;
+  --color-warning-hover: #e0a800;
+  --color-danger: #dc3545;
+  --color-danger-hover: #bb2d3b;
+  --color-success: #198754;
+  --color-success-hover: #157347;
+  --color-info: #0d6efd;
+  --color-info-hover: #0b5ed7;
+}
+
+:root {
+  color-scheme: light;
+}
+
+body {
+  margin: 0;
+  font-family: 'Sarabun', system-ui, 'Segoe UI', Roboto, sans-serif;
+  background-color: #fffaf5;
+}
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+
+  @page {
+    size: A4 portrait;
+    margin: 0;
+  }
+
+  body {
+    background: #fff;
+  }
+}

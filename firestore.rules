@@ -1,0 +1,32 @@
+rules_version = '2';
+
+// Rules for the "fixit" named Firestore database only (see firebase.json).
+// This app DOES use Firebase Auth (Email/Password, accounts created by an
+// admin via the Firebase Console) — unlike rytc-behavior-score, request.auth
+// is available here so access can genuinely be restricted to logged-in staff.
+//
+// `stats/summary` is the one deliberate exception: it holds only aggregate
+// counts (no personal data) so the public Dashboard can read it without
+// login, per product decision. Everything else (repairs + subcollections,
+// staff profiles) requires an authenticated staff account.
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /repairs/{repairId} {
+      allow read, write: if request.auth != null;
+
+      match /statusLogs/{logId} {
+        allow read, write: if request.auth != null;
+      }
+    }
+
+    match /staff/{uid} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && request.auth.uid == uid;
+    }
+
+    match /stats/{docId} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+  }
+}

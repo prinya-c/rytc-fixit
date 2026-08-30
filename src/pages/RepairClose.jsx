@@ -1,0 +1,124 @@
+import { useEffect, useState } from 'react'
+import { useNavigate, useParams } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext'
+import PhotoCaptureInput from '../components/PhotoCaptureInput'
+import { closeRepair, subscribeRepair } from '../lib/repairs'
+import { uploadRepairPhoto } from '../lib/storageUpload'
+
+const inputClass =
+  'w-full rounded-md border border-slate-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary'
+
+export default function RepairClose() {
+  const { id } = useParams()
+  const { user, staffProfile } = useAuth()
+  const navigate = useNavigate()
+
+  const [repair, setRepair] = useState(undefined)
+  const [itemPhoto, setItemPhoto] = useState(null)
+  const [personPhoto, setPersonPhoto] = useState(null)
+  const [receiverName, setReceiverName] = useState('')
+  const [receiverRelation, setReceiverRelation] = useState('')
+  const [error, setError] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+
+  useEffect(() => {
+    const unsub = subscribeRepair(id, (data) => {
+      setRepair(data)
+      if (data?.requester?.fullName) setReceiverName((prev) => prev || data.requester.fullName)
+    })
+    return unsub
+  }, [id])
+
+  if (repair === undefined) return <p className="text-center text-slate-400 py-10">กำลังโหลด...</p>
+  if (repair === null) return <p className="text-center text-danger py-10">ไม่พบรายการนี้</p>
+
+  async function handleSubmit(e) {
+    e.preventDefault()
+    if (!itemPhoto || !personPhoto) {
+      setError('กรุณาถ่ายรูปสิ่งของและรูปผู้รับคืนให้ครบ')
+      return
+    }
+    if (!receiverName.trim()) {
+      setError('กรุณากรอกชื่อผู้รับคืน')
+      return
+    }
+    setError('')
+    setSubmitting(true)
+    try {
+      const [itemPhotoUrl, personPhotoUrl] = await Promise.all([
+        uploadRepairPhoto(id, 'closure/item.jpg', itemPhoto),
+        uploadRepairPhoto(id, 'closure/person.jpg', personPhoto),
+      ])
+      await closeRepair(id, {
+        itemPhoto: itemPhotoUrl,
+        personPhoto: personPhotoUrl,
+        receiverName: receiverName.trim(),
+        receiverRelation: receiverRelation.trim(),
+        staffUid: user.uid,
+        staffName: staffProfile.fullName,
+      })
+      navigate(`/repairs/${id}`)
+    } catch (err) {
+      setError(err.message || 'บันทึกไม่สำเร็จ')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  return (
+    <div className="max-w-2xl mx-auto px-4 py-6 space-y-5">
+      <h1 className="text-xl font-bold text-slate-800">ปิดงาน / ส่งมอบคืน</h1>
+      <p className="text-sm text-slate-500">{repair.requester?.fullName} · รหัสรายการ {repair.id}</p>
+
+      <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow-sm border border-orange-100 p-5 space-y-4">
+        {error && (
+          <p className="text-sm text-danger bg-red-50 border border-red-200 rounded-md px-3 py-2">{error}</p>
+        )}
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <PhotoCaptureInput label="รูปสิ่งของที่ส่งคืน" file={itemPhoto} onChange={setItemPhoto} required />
+          <PhotoCaptureInput
+            label="รูปผู้รับคืนคู่กับสิ่งของ"
+            file={personPhoto}
+            onChange={setPersonPhoto}
+            capture="user"
+            required
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-slate-700 mb-1">ชื่อ-นามสกุลผู้รับคืน *</label>
+          <input value={receiverName} onChange={(e) => setReceiverName(e.target.value)} className={inputClass} />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-slate-700 mb-1">
+            ความเกี่ยวข้องกับเจ้าของ (กรณีมารับแทน)
+          </label>
+          <input
+            placeholder="เช่น บุตร, ญาติ, ตัวแทน"
+            value={receiverRelation}
+            onChange={(e) => setReceiverRelation(e.target.value)}
+            className={inputClass}
+          />
+        </div>
+
+        <div className="flex gap-3">
+          <button
+            type="submit"
+            disabled={submitting}
+            className="flex-1 bg-success hover:bg-success-hover text-white rounded-md py-2.5 font-medium disabled:opacity-60"
+          >
+            {submitting ? 'กำลังบันทึก...' : 'ยืนยันส่งมอบคืน'}
+          </button>
+          <button
+            type="button"
+            onClick={() => navigate(`/repairs/${id}`)}
+            className="rounded-md border border-slate-300 px-5 py-2.5 text-slate-600 hover:bg-slate-50"
+          >
+            ยกเลิก
+          </button>
+        </div>
+      </form>
+    </div>
+  )
+}
