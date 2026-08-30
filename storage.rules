@@ -1,11 +1,65 @@
 rules_version = '2';
 
-// Photos under fixit/{repairId}/... include images of requesters and staff,
-// so read/write is restricted to authenticated staff accounts only — never public.
+// ⚠️ Storage rules are GLOBAL to the whole `rytc-app` bucket — unlike
+// Firestore, they are NOT scoped per named database. This file must contain
+// the rules for EVERY app that uses this bucket, not just RYTC-Fix, or a
+// deploy from this repo will silently wipe out other apps' access rules.
+//
+// The `home-visits/`, `homeroom-logs/`, and `dropout-follow-ups/` blocks
+// below are copied verbatim from prinya-c/rytc-care-plus's own storage.rules
+// (that repo owns those paths) so this file stays a faithful superset of
+// what is actually live, restored after an accidental deploy from this repo
+// overwrote them on 2026-08-30.
+//
+// `join-rytc/` and `users/` are also live paths in this bucket but their
+// source rules have not been located yet (not tracked in any repo found so
+// far) — they are intentionally left OUT of the explicit matches below, so
+// the catch-all `allow read, write: if false` denies them for now rather
+// than guessing at their intended access policy. Restore their real rules
+// here as soon as they're found, then redeploy.
 service firebase.storage {
   match /b/{bucket}/o {
+    // --- prinya-c/rytc-care-plus ---
+
+    // Home visit photos and map images.
+    match /home-visits/{studentId}/{fileName} {
+      allow read: if true;
+      // request.resource is null on delete, so a delete must be its own
+      // branch — folding it into `write` alongside the size/type check
+      // would evaluate that check against a null resource and always deny.
+      allow create, update: if request.resource.size < 10 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*');
+      allow delete: if true;
+    }
+
+    // Homeroom activity log photos.
+    match /homeroom-logs/{classId}/{fileName} {
+      allow read: if true;
+      allow create, update: if request.resource.size < 10 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*');
+      allow delete: if true;
+    }
+
+    // Dropout follow-up evidence photos.
+    match /dropout-follow-ups/{studentId}/{fileName} {
+      allow read: if true;
+      allow create, update: if request.resource.size < 10 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*');
+      allow delete: if true;
+    }
+
+    // --- prinya-c/rytc-fixit (this app) ---
+
+    // Photos under fixit/{repairId}/... include images of requesters and
+    // staff, so read/write is restricted to authenticated staff accounts.
     match /fixit/{repairId}/{allPaths=**} {
       allow read, write: if request.auth != null;
+    }
+
+    // Anything not explicitly matched above (including join-rytc/ and
+    // users/, until their real rules are found) is denied.
+    match /{allPaths=**} {
+      allow read, write: if false;
     }
   }
 }
