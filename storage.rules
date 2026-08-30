@@ -21,11 +21,8 @@ rules_version = '2';
 // ⚠️ Confirm the join-rytc upload form still works after deploying this,
 // since this couldn't be verified against the original text.
 //
-// `users/` is still unidentified — no repo checked so far references it.
-// Left OUT of the explicit matches below, so the catch-all
-// `allow read, write: if false` denies it for now rather than guessing at
-// its access policy. Restore its real rule here once its owning app is
-// found, then redeploy.
+// The `users/{uid}/avatar.jpg` block below is copied verbatim from
+// prinya-c/rytc-pay's own storage.rules (that repo owns this path).
 service firebase.storage {
   match /b/{bucket}/o {
     // --- prinya-c/rytc-care-plus ---
@@ -65,6 +62,17 @@ service firebase.storage {
         && request.resource.contentType.matches('image/.*');
     }
 
+    // --- prinya-c/rytc-pay ---
+
+    // Profile avatars — owner read/write, others read
+    match /users/{uid}/avatar.jpg {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null
+                   && request.auth.uid == uid
+                   && request.resource.size < 2 * 1024 * 1024
+                   && request.resource.contentType.matches('image/.*');
+    }
+
     // --- prinya-c/rytc-fixit (this app) ---
 
     // Photos under fixit/{repairId}/... include images of requesters and
@@ -73,8 +81,7 @@ service firebase.storage {
       allow read, write: if request.auth != null;
     }
 
-    // Anything not explicitly matched above (including join-rytc/ and
-    // users/, until their real rules are found) is denied.
+    // Anything not explicitly matched above is denied.
     match /{allPaths=**} {
       allow read, write: if false;
     }
