@@ -1,32 +1,41 @@
 rules_version = '2';
 
 // Rules for the "fixit" named Firestore database only (see firebase.json).
-// This app DOES use Firebase Auth (Email/Password, accounts created by an
-// admin via the Firebase Console) — unlike rytc-behavior-score, request.auth
-// is available here so access can genuinely be restricted to logged-in staff.
+// This app DOES use Firebase Auth (Google Sign-In, restricted to
+// @technicrayong.ac.th accounts) — unlike rytc-behavior-score, request.auth
+// is available here so access can genuinely be restricted to logged-in
+// staff. The domain check here is the real enforcement: the app's
+// AuthContext also checks the domain and signs out non-matching accounts,
+// but that's client-side and can be bypassed, so isStaff() re-checks the
+// email domain from the ID token on every request.
 //
 // `stats/summary` is the one deliberate exception: it holds only aggregate
 // counts (no personal data) so the public Dashboard can read it without
 // login, per product decision. Everything else (repairs + subcollections,
-// staff profiles) requires an authenticated staff account.
+// staff profiles) requires an authenticated @technicrayong.ac.th account.
 service cloud.firestore {
   match /databases/{database}/documents {
+    function isStaff() {
+      return request.auth != null
+        && request.auth.token.email.matches('.*@technicrayong[.]ac[.]th$');
+    }
+
     match /repairs/{repairId} {
-      allow read, write: if request.auth != null;
+      allow read, write: if isStaff();
 
       match /statusLogs/{logId} {
-        allow read, write: if request.auth != null;
+        allow read, write: if isStaff();
       }
     }
 
     match /staff/{uid} {
-      allow read: if request.auth != null;
-      allow write: if request.auth != null && request.auth.uid == uid;
+      allow read: if isStaff();
+      allow write: if isStaff() && request.auth.uid == uid;
     }
 
     match /stats/{docId} {
       allow read: if true;
-      allow write: if request.auth != null;
+      allow write: if isStaff();
     }
   }
 }

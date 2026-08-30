@@ -7,7 +7,8 @@
 รักษาเบื้องต้น
 
 สร้างด้วย Vite + React + Tailwind CSS เก็บข้อมูลใน Firebase Firestore (database `fixit`)
-และรูปถ่ายใน Firebase Storage ใช้ Firebase Auth (Email/Password) สำหรับเจ้าหน้าที่
+และรูปถ่ายใน Firebase Storage ใช้ Firebase Auth (Google Sign-In จำกัดเฉพาะบัญชี
+`@technicrayong.ac.th`) สำหรับเจ้าหน้าที่
 
 ## การทำงานของแอป
 
@@ -88,10 +89,16 @@ stats/summary                        // doc เดียว, อ่านได�
    ```bash
    firebase firestore:databases:create fixit --project rytc-app --location <region>
    ```
-2. **เปิด Firebase Authentication → Sign-in method → Email/Password** (โปรเจกต์นี้ยังไม่เคยเปิด
-   Auth มาก่อน)
-3. **สร้างบัญชีเจ้าหน้าที่** ผ่าน Authentication → Users → Add user (อีเมล+รหัสผ่าน) — แอปไม่มี
-   หน้าสมัครสมาชิกเอง ตามที่ตกลงกันไว้ว่าแอดมินสร้างบัญชีให้เองผ่าน Console
+2. **เปิด Firebase Authentication → Sign-in method → Google** (โปรเจกต์นี้ยังไม่เคยเปิด
+   Auth มาก่อน) — ไม่ต้องสร้างบัญชีเจ้าหน้าที่ทีละคนใน Console เพราะแอปจำกัดสิทธิ์ด้วย
+   โดเมนอีเมลแทน (ดูข้อ 3)
+3. **การจำกัดสิทธิ์เจ้าหน้าที่**: แอปอนุญาตเฉพาะบัญชี Google ที่ลงท้ายด้วย
+   `@technicrayong.ac.th` เท่านั้น (เช็คทั้งฝั่ง client ใน `src/context/AuthContext.jsx`
+   และบังคับจริงอีกชั้นใน `firestore.rules`/`storage.rules` ผ่าน
+   `request.auth.token.email.matches(...)`) ใครก็ตามที่มีบัญชีโดเมนนี้ล็อกอินเข้าระบบได้ทันที
+   โดยไม่ต้องให้แอดมินสร้างบัญชีล่วงหน้า — ถ้าต้องการจำกัดเฉพาะบุคคลที่คัดเลือกไว้ (ไม่ใช่ทั้งโดเมน)
+   ต้องปรับ `isStaff()` ใน `firestore.rules` และเงื่อนไขใน `storage.rules` เพิ่มเป็น allow-list
+   รายอีเมลแทน
 4. **Deploy Security Rules** (Firestore + Storage):
    ```bash
    firebase deploy --only firestore:rules,storage --project rytc-app
