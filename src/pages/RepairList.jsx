@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import StatusBadge from '../components/StatusBadge'
 import { subscribeRepairs } from '../lib/repairs'
 import { ITEM_CATEGORIES, STATUSES } from '../lib/options'
@@ -9,9 +9,13 @@ function categoryLabel(category) {
 }
 
 export default function RepairList() {
+  const [searchParams] = useSearchParams()
   const [repairs, setRepairs] = useState(null)
   const [search, setSearch] = useState('')
-  const [statusFilter, setStatusFilter] = useState('')
+  // ค่าเริ่มต้นมาจาก query string ได้ (เช่น ลิงก์ drilldown จาก Dashboard: /repairs?status=3
+  // หรือ /repairs?category=vehicle) — จากนั้นเจ้าหน้าที่ปรับตัวกรองเองต่อได้ตามปกติ
+  const [statusFilter, setStatusFilter] = useState(() => searchParams.get('status') || '')
+  const [categoryFilter, setCategoryFilter] = useState(() => searchParams.get('category') || '')
 
   useEffect(() => subscribeRepairs(setRepairs), [])
 
@@ -20,6 +24,7 @@ export default function RepairList() {
     const term = search.trim().toLowerCase()
     return repairs.filter((r) => {
       if (statusFilter && String(r.status) !== statusFilter) return false
+      if (categoryFilter && r.item?.category !== categoryFilter) return false
       if (!term) return true
       return (
         r.requester?.fullName?.toLowerCase().includes(term) ||
@@ -27,7 +32,7 @@ export default function RepairList() {
         r.requester?.nationalId?.includes(term)
       )
     })
-  }, [repairs, search, statusFilter])
+  }, [repairs, search, statusFilter, categoryFilter])
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-6 space-y-5">
@@ -49,6 +54,18 @@ export default function RepairList() {
           className="flex-1 min-w-[220px] rounded-md border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
         />
         <select
+          value={categoryFilter}
+          onChange={(e) => setCategoryFilter(e.target.value)}
+          className="rounded-md border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+        >
+          <option value="">ทุกประเภท</option>
+          {ITEM_CATEGORIES.map((c) => (
+            <option key={c.value} value={c.value}>
+              {c.label}
+            </option>
+          ))}
+        </select>
+        <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
           className="rounded-md border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
@@ -60,6 +77,19 @@ export default function RepairList() {
             </option>
           ))}
         </select>
+        {(statusFilter || categoryFilter || search) && (
+          <button
+            type="button"
+            onClick={() => {
+              setSearch('')
+              setStatusFilter('')
+              setCategoryFilter('')
+            }}
+            className="rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-500 hover:bg-slate-50"
+          >
+            ล้างตัวกรอง
+          </button>
+        )}
       </div>
 
       {repairs === null && <p className="text-slate-400 text-center py-10">กำลังโหลด...</p>}

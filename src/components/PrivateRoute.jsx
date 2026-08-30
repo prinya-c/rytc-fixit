@@ -15,7 +15,10 @@ export default function PrivateRoute({ children }) {
   }
 
   if (!user) {
-    return <Navigate to="/staff/login" replace state={{ from: location.pathname }} />
+    // รวม query string ไปด้วย (ไม่ใช่แค่ pathname) เพื่อให้ลิงก์ drilldown จาก Dashboard
+    // (เช่น /repairs?status=3) ยังคงตัวกรองไว้ได้หลังล็อกอินเสร็จ
+    const from = location.pathname + location.search
+    return <Navigate to="/staff/login" replace state={{ from }} />
   }
 
   if (!staffProfile) {

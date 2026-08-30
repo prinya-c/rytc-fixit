@@ -1,18 +1,46 @@
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { STATUSES, ITEM_CATEGORIES } from '../lib/options'
 import { subscribeStats } from '../lib/stats'
 
 const CATEGORY_ICON = { tool_machine: '🔧', appliance: '🔌', vehicle: '🏍️', other: '📦' }
 
-function StatCard({ label, value, icon }) {
+function StatCard({ to, label, value, icon }) {
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-orange-100 p-4 flex items-center gap-3">
+    <Link
+      to={to}
+      className="bg-white rounded-xl shadow-sm border border-orange-100 p-4 flex items-center gap-3 hover:shadow-md hover:border-primary/40 transition-shadow"
+    >
       <span className="text-2xl">{icon}</span>
       <div>
         <p className="text-2xl font-bold text-slate-800">{value}</p>
         <p className="text-sm text-slate-500">{label}</p>
       </div>
-    </div>
+    </Link>
+  )
+}
+
+function StatusCard({ status, count, maxCount }) {
+  const pct = Math.round((count / maxCount) * 100)
+  return (
+    <Link
+      to={`/repairs?status=${status.code}`}
+      className="bg-white rounded-xl shadow-sm border border-orange-100 p-4 flex flex-col gap-2 hover:shadow-md hover:border-primary/40 transition-shadow"
+    >
+      <div className="flex items-start justify-between gap-2">
+        <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary-light text-primary text-xs font-bold">
+          {status.code}
+        </span>
+        <span className="text-xl font-bold text-slate-800">{count}</span>
+      </div>
+      <p className="text-sm text-slate-600 leading-snug">{status.label}</p>
+      <div className="h-1.5 rounded-full bg-orange-50 mt-auto">
+        <div
+          className="h-1.5 rounded-full bg-primary transition-all"
+          style={{ width: `${count > 0 ? Math.max(pct, 4) : 0}%` }}
+        />
+      </div>
+    </Link>
   )
 }
 
@@ -38,10 +66,11 @@ export default function Dashboard() {
       <section>
         <h2 className="text-lg font-semibold text-slate-700 mb-3">สรุปงานซ่อมทั้งหมด</h2>
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-          <StatCard label="รายการทั้งหมด" value={total} icon="🗂️" />
+          <StatCard to="/repairs" label="รายการทั้งหมด" value={total} icon="🗂️" />
           {ITEM_CATEGORIES.map((c) => (
             <StatCard
               key={c.value}
+              to={`/repairs?category=${c.value}`}
               label={c.label}
               value={stats?.byCategory?.[c.value] ?? 0}
               icon={CATEGORY_ICON[c.value]}
@@ -50,30 +79,17 @@ export default function Dashboard() {
         </div>
       </section>
 
-      <section className="bg-white rounded-2xl shadow-sm border border-orange-100 p-6">
-        <h2 className="text-lg font-semibold text-slate-700 mb-4">สถานะงานซ่อม</h2>
-        <div className="space-y-3">
-          {STATUSES.map((s) => {
-            const count = stats?.byStatus?.[String(s.code)] ?? 0
-            const pct = Math.round((count / maxStatusCount) * 100)
-            return (
-              <div key={s.code} className="flex items-center gap-3">
-                <span className="w-6 text-right text-sm font-semibold text-primary">{s.code}</span>
-                <div className="flex-1">
-                  <div className="flex justify-between text-sm text-slate-600 mb-1">
-                    <span>{s.label}</span>
-                    <span className="font-medium">{count}</span>
-                  </div>
-                  <div className="h-2 rounded-full bg-orange-50">
-                    <div
-                      className="h-2 rounded-full bg-primary transition-all"
-                      style={{ width: `${count > 0 ? Math.max(pct, 4) : 0}%` }}
-                    />
-                  </div>
-                </div>
-              </div>
-            )
-          })}
+      <section>
+        <h2 className="text-lg font-semibold text-slate-700 mb-3">สถานะงานซ่อม</h2>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+          {STATUSES.map((s) => (
+            <StatusCard
+              key={s.code}
+              status={s}
+              count={stats?.byStatus?.[String(s.code)] ?? 0}
+              maxCount={maxStatusCount}
+            />
+          ))}
         </div>
         {stats?.unrepairableCount > 0 && (
           <p className="mt-4 text-sm text-danger">
@@ -81,6 +97,10 @@ export default function Dashboard() {
           </p>
         )}
       </section>
+
+      <p className="text-xs text-slate-400 text-center">
+        คลิกการ์ดเพื่อดูรายการที่เกี่ยวข้อง (ต้องเข้าสู่ระบบเจ้าหน้าที่ก่อน)
+      </p>
     </div>
   )
 }
