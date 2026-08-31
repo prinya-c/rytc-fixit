@@ -1,4 +1,4 @@
-import { doc, onSnapshot, runTransaction, serverTimestamp } from 'firebase/firestore'
+import { doc, increment, onSnapshot, serverTimestamp, setDoc } from 'firebase/firestore'
 import { db } from './firebase'
 import { ITEM_CATEGORIES, STATUSES } from './options'
 
@@ -29,28 +29,12 @@ function emptyStats() {
   }
 }
 
-async function adjustStats(mutate) {
+// ใช้ increment() + setDoc(merge:true) แทน runTransaction() เพราะ transaction ต้องอ่าน
+// ค่าปัจจุบันจาก server ก่อนเขียนเสมอ จึงใช้งานตอนออฟไลน์ไม่ได้ — increment() เป็นคำสั่ง
+// เดลต้าที่ SDK คิวไว้ในเครื่องแล้วส่งไป apply ที่ server เองตอนกลับมาออนไลน์
+async function applyStats(delta) {
   const ref = doc(db, 'stats', STATS_ID)
-  await runTransaction(db, async (tx) => {
-    const snap = await tx.get(ref)
-    const current = snap.exists() ? snap.data() : emptyStats()
-    const next = mutate({
-      ...current,
-      byCategory: { ...current.byCategory },
-      byStatus: { ...current.byStatus },
-      byCategoryStatus: Object.fromEntries(
-        ITEM_CATEGORIES.map((c) => [c.value, { ...(current.byCategoryStatus?.[c.value] ?? emptyStatusCounts()) }]),
-      ),
-    })
-    next.updatedAt = serverTimestamp()
-    tx.set(ref, next)
-  })
-}
-
-function bumpMatrix(s, category, statusCode, delta) {
-  if (!s.byCategoryStatus[category]) s.byCategoryStatus[category] = emptyStatusCounts()
-  const key = String(statusCode)
-  s.byCategoryStatus[category][key] = Math.max(0, (s.byCategoryStatus[category][key] ?? 0) + delta)
+  await setDoc(ref, { ...delta, updatedAt: serverTimestamp() }, { merge: true })
 }
 
 export function subscribeStats(callback) {
@@ -61,42 +45,34 @@ export function subscribeStats(callback) {
 }
 
 export async function recordNewRepair(category) {
-  await adjustStats((s) => {
-    s.total = (s.total ?? 0) + 1
-    s.byCategory[category] = (s.byCategory[category] ?? 0) + 1
-    s.byStatus['1'] = (s.byStatus['1'] ?? 0) + 1
-    bumpMatrix(s, category, 1, 1)
-    return s
+  await applyStats({
+    total: increment(1),
+    byCategory: { [category]: increment(1) },
+    byStatus: { 1: increment(1) },
+    byCategoryStatus: { [category]: { 1: increment(1) } },
   })
 }
 
 export async function recordStatusChange(category, oldStatusCode, newStatusCode) {
   if (oldStatusCode === newStatusCode) return
-  await adjustStats((s) => {
-    s.byStatus[String(oldStatusCode)] = Math.max(0, (s.byStatus[String(oldStatusCode)] ?? 0) - 1)
-    s.byStatus[String(newStatusCode)] = (s.byStatus[String(newStatusCode)] ?? 0) + 1
-    bumpMatrix(s, category, oldStatusCode, -1)
-    bumpMatrix(s, category, newStatusCode, 1)
-    return s
+  await applyStats({
+    byStatus: { [oldStatusCode]: increment(-1), [newStatusCode]: increment(1) },
+    byCategoryStatus: {
+      [category]: { [oldStatusCode]: increment(-1), [newStatusCode]: increment(1) },
+    },
   })
 }
 
 export async function recordUnrepairableChange(delta) {
-  await adjustStats((s) => {
-    s.unrepairableCount = Math.max(0, (s.unrepairableCount ?? 0) + delta)
-    return s
-  })
+  await applyStats({ unrepairableCount: increment(delta) })
 }
 
 export async function recordDeleteRepair({ category, statusCode, unrepairable }) {
-  await adjustStats((s) => {
-    s.total = Math.max(0, (s.total ?? 0) - 1)
-    s.byCategory[category] = Math.max(0, (s.byCategory[category] ?? 0) - 1)
-    s.byStatus[String(statusCode)] = Math.max(0, (s.byStatus[String(statusCode)] ?? 0) - 1)
-    bumpMatrix(s, category, statusCode, -1)
-    if (unrepairable) {
-      s.unrepairableCount = Math.max(0, (s.unrepairableCount ?? 0) - 1)
-    }
-    return s
+  await applyStats({
+    total: increment(-1),
+    byCategory: { [category]: increment(-1) },
+    byStatus: { [statusCode]: increment(-1) },
+    byCategoryStatus: { [category]: { [statusCode]: increment(-1) } },
+    ...(unrepairable ? { unrepairableCount: increment(-1) } : {}),
   })
 }

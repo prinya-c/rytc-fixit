@@ -101,6 +101,24 @@ stats/summary                        // doc เดียว, อ่านได�
 **Storage** (`fixit/{repairId}/...`): `intake/item-1.jpg`, `intake/item-2.jpg`,
 `intake/person.jpg`, `closure/item.jpg`, `closure/person.jpg`
 
+## การใช้งานช่วงสัญญาณอินเทอร์เน็ตขาดหาย
+
+หน่วยออกให้บริการมักไปตั้งศูนย์ในพื้นที่ที่สัญญาณอินเทอร์เน็ตไม่เสถียร แอปจึงรองรับการทำงาน
+"ต่อเนื่องชั่วคราว" ระหว่างขาดสัญญาณ:
+
+- **ข้อมูลฟอร์ม (ลงทะเบียน/ประเมิน/อัปเดตสถานะ/ปิดงาน)**: Firestore SDK เปิด offline persistence
+  ไว้ (`src/lib/firebase.js` — `persistentLocalCache` + `persistentMultipleTabManager`) ข้อมูล
+  ที่บันทึกช่วงออฟไลน์จะถูกเก็บไว้ใน IndexedDB ของเบราว์เซอร์ก่อน แล้ว sync ขึ้น Firebase
+  อัตโนมัติทันทีที่สัญญาณกลับมา ไม่ต้องกดซิงก์เอง
+- **ตัวเลขสถิติ** (`stats/summary`): ใช้ `increment()` แทน `runTransaction()` เพราะ transaction
+  ต้องอ่านค่าจาก server ก่อนเขียนเสมอ ใช้ตอนออฟไลน์ไม่ได้ ส่วน `increment()` เป็นคำสั่งเดลต้าที่
+  SDK คิวไว้ในเครื่องแล้วส่งไป apply ที่ server เอง
+- **แถบแจ้งเตือน**: เมื่อเบราว์เซอร์ตรวจพบว่าออฟไลน์ (`navigator.onLine`) จะมีแถบสีเหลืองด้านบนแจ้ง
+  เตือนเจ้าหน้าที่ (`src/components/OnlineStatusBanner.jsx`)
+- **ข้อจำกัด**: การอัปโหลดรูปภาพขึ้น Firebase Storage **ยังไม่รองรับคิวออฟไลน์** ในเวอร์ชันนี้ —
+  ถ้าขาดสัญญาณตอนอัปโหลดรูป จะอัปโหลดไม่สำเร็จ ต้องรอสัญญาณกลับมาแล้วลองใหม่ (มีแผนจะเพิ่มคิว
+  อัปโหลดรูปออฟไลน์ในเฟสถัดไป)
+
 ## ⚙️ การตั้งค่า Firebase ก่อนใช้งานจริง (ต้องทำผ่าน Firebase Console)
 
 แอปนี้ใช้ Firebase project เดิม `rytc-app` (โปรเจกต์เดียวกับ `rytc-behavior-score`) แต่ต้องเปิด

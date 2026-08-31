@@ -3,6 +3,7 @@ import { AuthProvider } from './context/AuthContext'
 import PrivateRoute from './components/PrivateRoute'
 import Navbar from './components/Navbar'
 import Footer from './components/Footer'
+import OnlineStatusBanner from './components/OnlineStatusBanner'
 import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
 import RepairList from './pages/RepairList'
@@ -24,6 +25,7 @@ export default function App() {
     <AuthProvider>
       <HashRouter>
         <div className="min-h-screen bg-[#fffaf5] flex flex-col">
+          <OnlineStatusBanner />
           <Navbar />
           <div className="flex-1">
             <Routes>

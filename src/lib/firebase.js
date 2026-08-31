@@ -1,6 +1,6 @@
 import { initializeApp } from 'firebase/app'
 import { getAuth } from 'firebase/auth'
-import { getFirestore } from 'firebase/firestore'
+import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager } from 'firebase/firestore'
 import { getStorage } from 'firebase/storage'
 
 // Firebase web config is public by design (same project as rytc-behavior-score).
@@ -20,6 +20,23 @@ export const app = initializeApp(firebaseConfig)
 
 // The `rytc-app` project hosts multiple apps' data in separate named Firestore
 // databases. This app owns "fixit" — do not read/write any other database from here.
-export const db = getFirestore(app, 'fixit')
+//
+// Offline persistence: caches reads/writes in IndexedDB so the app keeps working
+// (including queued writes that sync automatically) when the network drops —
+// important because Fix it Center events often run in areas with weak signal.
+// `persistentMultipleTabManager` lets multiple open tabs share one cache instead
+// of fighting over it. Falls back to a plain in-memory Firestore instance if the
+// browser can't support persistence (e.g. some private-browsing modes).
+let db
+try {
+  db = initializeFirestore(
+    app,
+    { localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }) },
+    'fixit',
+  )
+} catch {
+  db = initializeFirestore(app, {}, 'fixit')
+}
+export { db }
 export const auth = getAuth(app)
 export const storage = getStorage(app)
