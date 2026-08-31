@@ -4,12 +4,21 @@ import QRCode from 'qrcode'
 import PrintTicket from '../components/PrintTicket'
 import { getRepair } from '../lib/repairs'
 
+// ลิงก์ติดตามสถานะสาธารณะ (Dashboard) — เหมือนกันทุกใบ ไม่ขึ้นกับรายการซ่อม
+const CONTACT_URL = 'https://fixit-app.ryct.ac.th'
+
 export default function RepairPrint() {
   const { id } = useParams()
   const navigate = useNavigate()
   const [repair, setRepair] = useState(null)
   const [qrDataUrl, setQrDataUrl] = useState(null)
+  const [contactQrDataUrl, setContactQrDataUrl] = useState(null)
   const [error, setError] = useState('')
+
+  useEffect(() => {
+    // ลิงก์ติดตามสถานะไม่ขึ้นกับ id ของรายการ สร้างได้ทันทีโดยไม่ต้องรอโหลดข้อมูล
+    QRCode.toDataURL(CONTACT_URL, { margin: 1, width: 200 }).then(setContactQrDataUrl)
+  }, [])
 
   useEffect(() => {
     let active = true
@@ -34,7 +43,7 @@ export default function RepairPrint() {
   if (error) {
     return <p className="text-center text-danger py-10">{error}</p>
   }
-  if (!repair || !qrDataUrl) {
+  if (!repair || !qrDataUrl || !contactQrDataUrl) {
     return <p className="text-center text-slate-400 py-10">กำลังโหลด...</p>
   }
 
@@ -56,10 +65,10 @@ export default function RepairPrint() {
       </div>
 
       <div className="mx-auto w-[210mm] h-[297mm] grid grid-cols-2 grid-rows-2 bg-white">
-        <PrintTicket repair={repair} qrDataUrl={qrDataUrl} />
-        <PrintTicket repair={repair} qrDataUrl={qrDataUrl} />
-        <PrintTicket repair={repair} qrDataUrl={qrDataUrl} />
-        <PrintTicket repair={repair} qrDataUrl={qrDataUrl} />
+        <PrintTicket repair={repair} qrDataUrl={qrDataUrl} contactQrDataUrl={contactQrDataUrl} />
+        <PrintTicket repair={repair} qrDataUrl={qrDataUrl} contactQrDataUrl={contactQrDataUrl} />
+        <PrintTicket repair={repair} qrDataUrl={qrDataUrl} contactQrDataUrl={contactQrDataUrl} />
+        <PrintTicket repair={repair} qrDataUrl={qrDataUrl} contactQrDataUrl={contactQrDataUrl} />
       </div>
     </div>
   )

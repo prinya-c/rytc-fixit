@@ -12,7 +12,7 @@ function categoryLabel(item) {
   return cat
 }
 
-export default function PrintTicket({ repair, qrDataUrl }) {
+export default function PrintTicket({ repair, qrDataUrl, contactQrDataUrl }) {
   return (
     <div className="border border-dashed border-slate-400 p-4 flex flex-col gap-3 text-sm leading-snug text-slate-800 overflow-hidden">
       <div className="flex items-start justify-between gap-3 border-b-2 border-slate-300 pb-2">
@@ -43,9 +43,15 @@ export default function PrintTicket({ repair, qrDataUrl }) {
         <p>โทรศัพท์: {repair.intake.staffPhone}</p>
       </div>
 
-      <p className="mt-auto pt-2 text-xs text-slate-400 border-t border-slate-200">
-        รหัสรายการ: {repair.id}
-      </p>
+      <div className="mt-auto pt-2 border-t border-slate-200 flex items-center gap-2">
+        <img src={contactQrDataUrl} alt="QR ติดตามสถานะ" className="h-14 w-14 shrink-0" />
+        <p className="text-[10px] leading-tight text-slate-500">
+          สแกนเพื่อติดตามสถานะงานซ่อม
+          <br />
+          หรือโทรสอบถามได้ที่เจ้าหน้าที่รับลงทะเบียน
+        </p>
+      </div>
+      <p className="text-[10px] text-slate-400">รหัสรายการ: {repair.id}</p>
     </div>
   )
 }
