@@ -86,13 +86,16 @@ export default function Dashboard() {
   const [selectedStatus, setSelectedStatus] = useState(null)
   const [drilldownItems, setDrilldownItems] = useState(null)
   const [drilldownError, setDrilldownError] = useState('')
+  // true ตั้งแต่แตะการ์ดใบแรก (รวมการ์ด "รายการทั้งหมด" ด้วย) — ต่างจาก hasFilter
+  // ตรงที่ "รายการทั้งหมด" ก็ต้องโชว์รายการจริงเหมือนกัน ไม่ใช่แค่ตัวกรองเฉพาะเจาะจง
+  const [interacted, setInteracted] = useState(false)
 
   useEffect(() => subscribeStats(setStats), [])
 
   const hasFilter = Boolean(selectedCategory || selectedStatus)
 
   useEffect(() => {
-    if (!hasFilter) {
+    if (!interacted) {
       setDrilldownItems(null)
       setDrilldownError('')
       return undefined
@@ -104,7 +107,7 @@ export default function Dashboard() {
       setDrilldownItems,
       (err) => setDrilldownError(err.message || 'โหลดรายการไม่สำเร็จ'),
     )
-  }, [selectedCategory, selectedStatus, hasFilter])
+  }, [selectedCategory, selectedStatus, interacted])
 
   const filteredTotal = countFor(stats, selectedCategory, selectedStatus)
   const maxStatusCount = Math.max(
@@ -140,6 +143,7 @@ export default function Dashboard() {
             onClick={() => {
               setSelectedCategory('')
               setSelectedStatus(null)
+              setInteracted(true)
             }}
             className="text-sm text-primary hover:underline"
           >
@@ -154,10 +158,11 @@ export default function Dashboard() {
             icon="🗂️"
             label={hasFilter ? 'รวมตามตัวกรอง' : 'รายการทั้งหมด'}
             value={filteredTotal}
-            active={false}
+            active={interacted && !hasFilter}
             onClick={() => {
               setSelectedCategory('')
               setSelectedStatus(null)
+              setInteracted(true)
             }}
           />
           {ITEM_CATEGORIES.map((c) => (
@@ -167,7 +172,10 @@ export default function Dashboard() {
               label={c.label}
               value={countFor(stats, c.value, selectedStatus)}
               active={selectedCategory === c.value}
-              onClick={() => setSelectedCategory((prev) => (prev === c.value ? '' : c.value))}
+              onClick={() => {
+                setSelectedCategory((prev) => (prev === c.value ? '' : c.value))
+                setInteracted(true)
+              }}
             />
           ))}
         </div>
@@ -183,7 +191,10 @@ export default function Dashboard() {
               count={countFor(stats, selectedCategory, s.code)}
               maxCount={maxStatusCount}
               active={selectedStatus === s.code}
-              onClick={() => setSelectedStatus((prev) => (prev === s.code ? null : s.code))}
+              onClick={() => {
+                setSelectedStatus((prev) => (prev === s.code ? null : s.code))
+                setInteracted(true)
+              }}
             />
           ))}
         </div>
@@ -194,9 +205,11 @@ export default function Dashboard() {
         )}
       </section>
 
-      {hasFilter && (
+      {interacted && (
         <section className="bg-white rounded-2xl shadow-sm border border-orange-100 p-6">
-          <h2 className="text-lg font-semibold text-slate-700 mb-1">รายการที่ตรงกับตัวกรอง</h2>
+          <h2 className="text-lg font-semibold text-slate-700 mb-1">
+            {hasFilter ? 'รายการที่ตรงกับตัวกรอง' : 'รายการทั้งหมด'}
+          </h2>
           <p className="text-xs text-slate-400 mb-4">
             แสดงเฉพาะรูปสิ่งของ ประเภท และสถานะ — ไม่มีชื่อ เบอร์โทร หรือข้อมูลส่วนบุคคลของผู้ขอรับบริการ
           </p>
@@ -237,9 +250,11 @@ export default function Dashboard() {
         </section>
       )}
 
-      <p className="text-xs text-slate-400 text-center">
-        คลิกการ์ดเพื่อเจาะลึกตัวเลข (กดซ้ำ หรือกด "ล้างตัวกรอง" เพื่อกลับไปดูภาพรวม)
-      </p>
+      {!interacted && (
+        <p className="text-xs text-slate-400 text-center">
+          คลิกการ์ดใดก็ได้ (รวมถึง "รายการทั้งหมด") เพื่อดูรายการจริงที่ตรงกับการ์ดนั้น
+        </p>
+      )}
     </div>
   )
 }
