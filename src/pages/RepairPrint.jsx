@@ -21,7 +21,8 @@ export default function RepairPrint() {
       }
       setRepair(data)
       const url = `${window.location.origin}${import.meta.env.BASE_URL}#/repairs/${id}`
-      QRCode.toDataURL(url, { margin: 1, width: 240 }).then((dataUrl) => {
+      // width สูงกว่าที่แสดงจริง (h-32 ~128px ในหน้าเว็บ) เพื่อให้คมชัดตอนพิมพ์บนกระดาษจริง
+      QRCode.toDataURL(url, { margin: 1, width: 400 }).then((dataUrl) => {
         if (active) setQrDataUrl(dataUrl)
       })
     })
