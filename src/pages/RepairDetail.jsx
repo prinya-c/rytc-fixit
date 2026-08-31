@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
+import PhotoLightbox from '../components/PhotoLightbox'
 import StatusBadge from '../components/StatusBadge'
 import { deleteRepair, subscribeRepair, subscribeStatusLogs } from '../lib/repairs'
 import { ITEM_CATEGORIES, VEHICLE_TYPES } from '../lib/options'
@@ -35,6 +36,7 @@ export default function RepairDetail() {
   const [repair, setRepair] = useState(undefined)
   const [logs, setLogs] = useState([])
   const [deleting, setDeleting] = useState(false)
+  const [lightboxUrl, setLightboxUrl] = useState(null)
 
   useEffect(() => subscribeRepair(id, setRepair), [id])
   useEffect(() => subscribeStatusLogs(id, setLogs), [id])
@@ -122,7 +124,14 @@ export default function RepairDetail() {
         {allPhotos.length > 0 && (
           <div className="grid grid-cols-3 gap-2 pt-2">
             {allPhotos.map((url) => (
-              <img key={url} src={url} alt="" className="h-24 w-full object-cover rounded-md" />
+              <button
+                key={url}
+                type="button"
+                onClick={() => setLightboxUrl(url)}
+                className="h-24 w-full rounded-md overflow-hidden cursor-zoom-in"
+              >
+                <img src={url} alt="" className="h-full w-full object-cover" />
+              </button>
             ))}
           </div>
         )}
@@ -159,7 +168,14 @@ export default function RepairDetail() {
           </p>
           <div className="grid grid-cols-2 gap-2 pt-2 max-w-xs">
             {[repair.closure.itemPhoto, repair.closure.personPhoto].filter(Boolean).map((url) => (
-              <img key={url} src={url} alt="" className="h-24 w-full object-cover rounded-md" />
+              <button
+                key={url}
+                type="button"
+                onClick={() => setLightboxUrl(url)}
+                className="h-24 w-full rounded-md overflow-hidden cursor-zoom-in"
+              >
+                <img src={url} alt="" className="h-full w-full object-cover" />
+              </button>
             ))}
           </div>
         </Section>
@@ -182,6 +198,8 @@ export default function RepairDetail() {
           ))}
         </ol>
       </Section>
+
+      <PhotoLightbox src={lightboxUrl} onClose={() => setLightboxUrl(null)} />
     </div>
   )
 }
