@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import PhotoCaptureInput from '../components/PhotoCaptureInput'
 import { buildRepairId, createRepair } from '../lib/repairs'
-import { uploadRepairPhoto } from '../lib/storageUpload'
+import { uploadOrQueuePhoto } from '../lib/offlineQueue'
 import {
   ACCESSORY_OPTIONS,
   CONDITION_OPTIONS,
@@ -127,10 +127,12 @@ export default function RepairForm() {
     setSubmitting(true)
     try {
       const repairId = buildRepairId(nationalId.trim())
+      // อัปโหลดรูปแบบ "พยายามก่อน ถ้าไม่ได้ค่อยคิวไว้" — ไม่บล็อกการลงทะเบียนตอนไม่มีสัญญาณ
+      // (คิวจะไล่อัปโหลดอัตโนมัติตอนกลับมาออนไลน์ ดู offlineQueue.js)
       const [itemPhoto1Url, itemPhoto2Url, personPhotoUrl] = await Promise.all([
-        uploadRepairPhoto(repairId, 'intake/item-1.jpg', itemPhoto1),
-        uploadRepairPhoto(repairId, 'intake/item-2.jpg', itemPhoto2),
-        uploadRepairPhoto(repairId, 'intake/person.jpg', personPhoto),
+        uploadOrQueuePhoto({ repairId, kind: 'intake', slot: 'item1', subPath: 'intake/item-1.jpg', file: itemPhoto1 }),
+        uploadOrQueuePhoto({ repairId, kind: 'intake', slot: 'item2', subPath: 'intake/item-2.jpg', file: itemPhoto2 }),
+        uploadOrQueuePhoto({ repairId, kind: 'intake', slot: 'person', subPath: 'intake/person.jpg', file: personPhoto }),
       ])
 
       await createRepair(repairId, {

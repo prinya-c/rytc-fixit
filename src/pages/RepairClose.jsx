@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import PhotoCaptureInput from '../components/PhotoCaptureInput'
 import { closeRepair, subscribeRepair } from '../lib/repairs'
-import { uploadRepairPhoto } from '../lib/storageUpload'
+import { uploadOrQueuePhoto } from '../lib/offlineQueue'
 
 const inputClass =
   'w-full rounded-md border border-slate-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary'
@@ -46,8 +46,8 @@ export default function RepairClose() {
     setSubmitting(true)
     try {
       const [itemPhotoUrl, personPhotoUrl] = await Promise.all([
-        uploadRepairPhoto(id, 'closure/item.jpg', itemPhoto),
-        uploadRepairPhoto(id, 'closure/person.jpg', personPhoto),
+        uploadOrQueuePhoto({ repairId: id, kind: 'closure', slot: 'item', subPath: 'closure/item.jpg', file: itemPhoto }),
+        uploadOrQueuePhoto({ repairId: id, kind: 'closure', slot: 'person', subPath: 'closure/person.jpg', file: personPhoto }),
       ])
       await closeRepair(id, {
         itemPhoto: itemPhotoUrl,

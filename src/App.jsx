@@ -1,9 +1,11 @@
+import { useEffect } from 'react'
 import { HashRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { AuthProvider } from './context/AuthContext'
 import PrivateRoute from './components/PrivateRoute'
 import Navbar from './components/Navbar'
 import Footer from './components/Footer'
 import OnlineStatusBanner from './components/OnlineStatusBanner'
+import { initOfflineQueue } from './lib/offlineQueue'
 import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
 import RepairList from './pages/RepairList'
@@ -21,6 +23,10 @@ function withPrivate(element) {
 }
 
 export default function App() {
+  useEffect(() => {
+    initOfflineQueue()
+  }, [])
+
   return (
     <AuthProvider>
       <HashRouter>

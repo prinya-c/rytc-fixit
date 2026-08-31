@@ -1,12 +1,14 @@
 import { useEffect, useState } from 'react'
+import { subscribePendingCount } from '../lib/offlineQueue'
 
 /**
- * แถบแจ้งเตือนเมื่อเครื่องขาดการเชื่อมต่ออินเทอร์เน็ต — ข้อมูลที่บันทึกช่วงนี้ยังถูกเก็บไว้
- * ในเครื่อง (Firestore offline cache) และจะซิงก์ขึ้น Firebase อัตโนมัติเมื่อกลับมาออนไลน์
- * ยกเว้นรูปภาพที่ยังอัปโหลดไม่สำเร็จ ต้องรออินเทอร์เน็ตกลับมาก่อนจึงจะอัปโหลดได้
+ * แถบแจ้งเตือนสถานะออฟไลน์/ซิงก์รูปภาพ:
+ * - ขาดสัญญาณ: ข้อมูลฟอร์มยังบันทึกได้ปกติ (Firestore offline cache) แต่รูปภาพต้องรอคิว
+ * - กลับมาออนไลน์แล้วแต่ยังมีรูปค้างคิวอยู่ (offlineQueue.js): แจ้งว่ากำลังซิงก์ให้อัตโนมัติ
  */
 export default function OnlineStatusBanner() {
   const [online, setOnline] = useState(navigator.onLine)
+  const [pendingCount, setPendingCount] = useState(0)
 
   useEffect(() => {
     function handleOnline() {
@@ -23,12 +25,24 @@ export default function OnlineStatusBanner() {
     }
   }, [])
 
-  if (online) return null
+  useEffect(() => subscribePendingCount(setPendingCount), [])
 
-  return (
-    <div className="bg-amber-500 text-white text-sm text-center py-2 px-4">
-      📴 ขณะนี้ไม่มีสัญญาณอินเทอร์เน็ต — ข้อมูลจะถูกบันทึกไว้ในเครื่องและซิงก์อัตโนมัติเมื่อกลับมาออนไลน์
-      (ยกเว้นรูปภาพที่ยังอัปโหลดไม่สำเร็จ)
-    </div>
-  )
+  if (!online) {
+    return (
+      <div className="bg-amber-500 text-white text-sm text-center py-2 px-4">
+        📴 ขณะนี้ไม่มีสัญญาณอินเทอร์เน็ต — ข้อมูลจะถูกบันทึกไว้ในเครื่องและซิงก์อัตโนมัติเมื่อกลับมาออนไลน์
+        (ยกเว้นรูปภาพที่ยังอัปโหลดไม่สำเร็จ)
+      </div>
+    )
+  }
+
+  if (pendingCount > 0) {
+    return (
+      <div className="bg-sky-500 text-white text-sm text-center py-2 px-4">
+        🔄 กำลังซิงก์รูปภาพที่ค้างไว้ตอนออฟไลน์ {pendingCount} รูป...
+      </div>
+    )
+  }
+
+  return null
 }

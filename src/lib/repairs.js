@@ -1,5 +1,7 @@
 import {
   addDoc,
+  arrayRemove,
+  arrayUnion,
   collection,
   deleteDoc,
   doc,
@@ -78,6 +80,15 @@ export async function createRepair(
   // ผู้ขอรับบริการ ถ้าใช้ค่าเดียวกันเป็น doc id ของ publicRepairs (ซึ่งเปิดอ่านสาธารณะ) เลขบัตร
   // ประชาชนจะรั่วออกไปทาง document id แม้ในตัวฟิลด์จะไม่มีข้อมูลนี้อยู่ก็ตาม
   const publicId = doc(collection(db, PUBLIC_REPAIRS)).id
+
+  // ช่องรูปที่เป็น null คือยังอัปโหลดไม่สำเร็จ (คิวไว้ในเครื่องตอนออฟไลน์ — ดู offlineQueue.js)
+  // pendingPhotos เก็บ slot ที่ยังรอไว้ ให้ resolvePendingIntakePhoto() รู้ว่าต้องแก้ฟิลด์ไหน
+  // เมื่ออัปโหลดสำเร็จภายหลัง
+  const pendingPhotos = []
+  if (!photosIntake?.itemPhotos?.[0]) pendingPhotos.push('intake:item1')
+  if (!photosIntake?.itemPhotos?.[1]) pendingPhotos.push('intake:item2')
+  if (!photosIntake?.personPhoto) pendingPhotos.push('intake:person')
+
   await setDoc(ref, {
     requester,
     item,
@@ -92,6 +103,7 @@ export async function createRepair(
     assessment: null,
     closure: null,
     publicId,
+    pendingPhotos,
     createdAt: now,
     updatedAt: now,
   })
@@ -243,6 +255,50 @@ export async function saveQualityCheck(
   })
 }
 
+/**
+ * แก้ URL รูปที่ค้างอัปโหลดตอนออฟไลน์กลับเข้าไปในเอกสาร เรียกจาก offlineQueue.js เมื่ออัปโหลด
+ * รูปสำเร็จภายหลัง (slot: 'item1' | 'item2' | 'person') — ถ้าเป็นรูปเครื่องใช้รูปแรก จะอัปเดต
+ * publicRepairs ให้ Dashboard สาธารณะเห็นรูปด้วย
+ */
+export async function resolvePendingIntakePhoto(repairId, slot, url) {
+  const ref = doc(db, REPAIRS, repairId)
+  const snap = await getDoc(ref)
+  if (!snap.exists()) return
+  const data = snap.data()
+  const itemPhotos = [...(data.photosIntake?.itemPhotos ?? [null, null])]
+  const photosIntake = { ...data.photosIntake, itemPhotos, personPhoto: data.photosIntake?.personPhoto ?? null }
+  if (slot === 'item1') itemPhotos[0] = url
+  else if (slot === 'item2') itemPhotos[1] = url
+  else if (slot === 'person') photosIntake.personPhoto = url
+
+  await updateDoc(ref, {
+    photosIntake,
+    pendingPhotos: arrayRemove(`intake:${slot}`),
+    updatedAt: serverTimestamp(),
+  })
+
+  if (slot === 'item1' && data.publicId) {
+    await updateDoc(doc(db, PUBLIC_REPAIRS, data.publicId), { itemPhoto: url })
+  }
+}
+
+/** เหมือน resolvePendingIntakePhoto แต่สำหรับรูปตอนปิดงาน/ส่งมอบคืน (slot: 'item' | 'person') */
+export async function resolvePendingClosurePhoto(repairId, slot, url) {
+  const ref = doc(db, REPAIRS, repairId)
+  const snap = await getDoc(ref)
+  if (!snap.exists()) return
+  const data = snap.data()
+  const closure = { ...data.closure }
+  if (slot === 'item') closure.itemPhoto = url
+  else if (slot === 'person') closure.personPhoto = url
+
+  await updateDoc(ref, {
+    closure,
+    pendingPhotos: arrayRemove(`closure:${slot}`),
+    updatedAt: serverTimestamp(),
+  })
+}
+
 /** เปลี่ยนสถานะงานซ่อม + บันทึก log + ปรับสถิติ ใช้ร่วมกันทุกหน้าที่เปลี่ยนสถานะ */
 export async function changeRepairStatus(
   repairId,
@@ -295,16 +351,23 @@ export async function changeRepairStatus(
 
 /** ปิดงาน/ส่งมอบคืน — บันทึกรูป+ผู้รับคืน แล้วเปลี่ยนสถานะเป็น "ส่งมอบ" (8) */
 export async function closeRepair(repairId, { itemPhoto, personPhoto, receiverName, receiverRelation, staffUid, staffName }) {
+  // itemPhoto/personPhoto เป็น null ได้ถ้ายังอัปโหลดไม่สำเร็จตอนออฟไลน์ — เติมเข้า pendingPhotos
+  // แบบ arrayUnion เพื่อไม่ทับ slot ฝั่ง intake ที่อาจยังค้างอยู่ (ไม่น่าเกิดแต่กันไว้)
+  const pendingAdditions = []
+  if (!itemPhoto) pendingAdditions.push('closure:item')
+  if (!personPhoto) pendingAdditions.push('closure:person')
+
   await updateDoc(doc(db, REPAIRS, repairId), {
     closure: {
-      itemPhoto,
-      personPhoto,
+      itemPhoto: itemPhoto ?? null,
+      personPhoto: personPhoto ?? null,
       receiverName,
       receiverRelation: receiverRelation || null,
       closedByUid: staffUid,
       closedByName: staffName,
       closedAt: serverTimestamp(),
     },
+    ...(pendingAdditions.length > 0 ? { pendingPhotos: arrayUnion(...pendingAdditions) } : {}),
     updatedAt: serverTimestamp(),
   })
   await changeRepairStatus(repairId, {

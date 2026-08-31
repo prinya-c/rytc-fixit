@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import PhotoLightbox from '../components/PhotoLightbox'
+import PhotoOrPending from '../components/PhotoOrPending'
 import StatusBadge from '../components/StatusBadge'
+import { clearPendingForRepair } from '../lib/offlineQueue'
 import { deleteRepair, subscribeRepair, subscribeStatusLogs } from '../lib/repairs'
 import { ITEM_CATEGORIES, VEHICLE_TYPES } from '../lib/options'
 
@@ -46,6 +48,7 @@ export default function RepairDetail() {
     setDeleting(true)
     try {
       await deleteRepair(id)
+      await clearPendingForRepair(id)
       navigate('/repairs', { replace: true })
     } catch (err) {
       window.alert(err.message || 'ลบไม่สำเร็จ')
@@ -56,7 +59,15 @@ export default function RepairDetail() {
   if (repair === undefined) return <p className="text-center text-slate-400 py-10">กำลังโหลด...</p>
   if (repair === null) return <p className="text-center text-danger py-10">ไม่พบรายการนี้</p>
 
-  const allPhotos = [...(repair.photosIntake?.itemPhotos ?? []), repair.photosIntake?.personPhoto].filter(Boolean)
+  // แสดงครบ 3 ช่องเสมอ (ไม่กรอง null ทิ้ง) เพื่อให้เห็นว่ารูปไหนยังรอซิงก์จากคิวออฟไลน์อยู่
+  const intakePhotos = [
+    repair.photosIntake?.itemPhotos?.[0] ?? null,
+    repair.photosIntake?.itemPhotos?.[1] ?? null,
+    repair.photosIntake?.personPhoto ?? null,
+  ]
+  const closurePhotos = repair.closure
+    ? [repair.closure.itemPhoto ?? null, repair.closure.personPhoto ?? null]
+    : []
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-6 space-y-5">
@@ -129,20 +140,17 @@ export default function RepairDetail() {
             <p>อุปกรณ์ที่ติดมาด้วย: {repair.intakeCondition.accessories.join(', ')}</p>
           )}
         </div>
-        {allPhotos.length > 0 && (
-          <div className="grid grid-cols-3 gap-2 pt-2">
-            {allPhotos.map((url) => (
-              <button
-                key={url}
-                type="button"
-                onClick={() => setLightboxUrl(url)}
-                className="h-28 w-full rounded-md overflow-hidden cursor-zoom-in bg-orange-50"
-              >
-                <img src={url} alt="" className="h-full w-full object-contain" />
-              </button>
-            ))}
-          </div>
-        )}
+        <div className="grid grid-cols-3 gap-2 pt-2">
+          {intakePhotos.map((url, i) => (
+            <PhotoOrPending
+              key={i}
+              src={url}
+              alt=""
+              onClick={url ? () => setLightboxUrl(url) : undefined}
+              className="h-28 w-full rounded-md overflow-hidden cursor-zoom-in bg-orange-50"
+            />
+          ))}
+        </div>
       </Section>
 
       <Section title="เจ้าหน้าที่รับลงทะเบียน">
@@ -175,15 +183,14 @@ export default function RepairDetail() {
             โดย {repair.closure.closedByName} เมื่อ {formatDate(repair.closure.closedAt)}
           </p>
           <div className="grid grid-cols-2 gap-2 pt-2 max-w-xs">
-            {[repair.closure.itemPhoto, repair.closure.personPhoto].filter(Boolean).map((url) => (
-              <button
-                key={url}
-                type="button"
-                onClick={() => setLightboxUrl(url)}
+            {closurePhotos.map((url, i) => (
+              <PhotoOrPending
+                key={i}
+                src={url}
+                alt=""
+                onClick={url ? () => setLightboxUrl(url) : undefined}
                 className="h-28 w-full rounded-md overflow-hidden cursor-zoom-in bg-orange-50"
-              >
-                <img src={url} alt="" className="h-full w-full object-contain" />
-              </button>
+              />
             ))}
           </div>
         </Section>

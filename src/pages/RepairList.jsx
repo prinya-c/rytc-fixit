@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
+import PhotoOrPending from '../components/PhotoOrPending'
 import StatusBadge from '../components/StatusBadge'
 import { subscribeRepairs } from '../lib/repairs'
 import { ITEM_CATEGORIES, STATUSES } from '../lib/options'
@@ -104,7 +105,7 @@ export default function RepairList() {
             to={`/repairs/${r.id}`}
             className="bg-white rounded-xl shadow-sm border border-orange-100 overflow-hidden hover:shadow-md transition-shadow"
           >
-            <img
+            <PhotoOrPending
               src={r.photosIntake?.itemPhotos?.[0]}
               alt={r.requester?.fullName}
               className="h-36 w-full object-contain bg-orange-50"

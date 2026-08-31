@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import PhotoOrPending from '../components/PhotoOrPending'
 import StatusBadge from '../components/StatusBadge'
 import { useAuth } from '../context/AuthContext'
 import { STATUSES, ITEM_CATEGORIES, VEHICLE_TYPES } from '../lib/options'
@@ -250,7 +251,7 @@ export default function Dashboard() {
                   key={r.id}
                   className="rounded-xl border border-orange-100 overflow-hidden bg-white"
                 >
-                  <img
+                  <PhotoOrPending
                     src={r.itemPhoto}
                     alt={categoryLabel(r)}
                     className="h-28 w-full object-contain bg-orange-50"
