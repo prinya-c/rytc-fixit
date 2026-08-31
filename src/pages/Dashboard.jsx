@@ -85,6 +85,7 @@ export default function Dashboard() {
   const [selectedCategory, setSelectedCategory] = useState('')
   const [selectedStatus, setSelectedStatus] = useState(null)
   const [drilldownItems, setDrilldownItems] = useState(null)
+  const [drilldownError, setDrilldownError] = useState('')
 
   useEffect(() => subscribeStats(setStats), [])
 
@@ -93,12 +94,15 @@ export default function Dashboard() {
   useEffect(() => {
     if (!hasFilter) {
       setDrilldownItems(null)
+      setDrilldownError('')
       return undefined
     }
     setDrilldownItems(null)
+    setDrilldownError('')
     return subscribePublicRepairs(
       { category: selectedCategory || undefined, status: selectedStatus || undefined },
       setDrilldownItems,
+      (err) => setDrilldownError(err.message || 'โหลดรายการไม่สำเร็จ'),
     )
   }, [selectedCategory, selectedStatus, hasFilter])
 
@@ -196,11 +200,20 @@ export default function Dashboard() {
           <p className="text-xs text-slate-400 mb-4">
             แสดงเฉพาะรูปสิ่งของ ประเภท และสถานะ — ไม่มีชื่อ เบอร์โทร หรือข้อมูลส่วนบุคคลของผู้ขอรับบริการ
           </p>
-          {drilldownItems === null && <p className="text-slate-400 text-center py-6">กำลังโหลด...</p>}
-          {drilldownItems !== null && drilldownItems.length === 0 && (
+          {drilldownError && (
+            <p className="text-sm text-danger bg-red-50 border border-red-200 rounded-md px-3 py-2 mb-3">
+              โหลดรายการไม่สำเร็จ: {drilldownError} — ถ้าขึ้นว่า permission-denied
+              แปลว่ายังไม่ได้ deploy firestore.rules เวอร์ชันล่าสุด (ต้องมี collection
+              publicRepairs เปิด read สาธารณะไว้)
+            </p>
+          )}
+          {!drilldownError && drilldownItems === null && (
+            <p className="text-slate-400 text-center py-6">กำลังโหลด...</p>
+          )}
+          {!drilldownError && drilldownItems !== null && drilldownItems.length === 0 && (
             <p className="text-slate-400 text-center py-6">ไม่พบรายการที่ตรงกับตัวกรองนี้</p>
           )}
-          {drilldownItems !== null && drilldownItems.length > 0 && (
+          {!drilldownError && drilldownItems !== null && drilldownItems.length > 0 && (
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
               {drilldownItems.map((r) => (
                 <div

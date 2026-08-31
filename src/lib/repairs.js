@@ -123,16 +123,20 @@ export function subscribeStatusLogs(repairId, callback) {
  * ไม่มี orderBy ในตัว query เอง เพื่อเลี่ยงต้องสร้าง composite index — เรียงลำดับฝั่ง client แทน
  * (จำนวนรายการต่อศูนย์ซ่อมหนึ่งแห่งไม่มากพอที่จะมีปัญหาประสิทธิภาพ)
  */
-export function subscribePublicRepairs({ category, status } = {}, callback) {
+export function subscribePublicRepairs({ category, status } = {}, callback, onError) {
   const constraints = []
   if (category) constraints.push(where('category', '==', category))
   if (status) constraints.push(where('status', '==', status))
   const q = query(collection(db, PUBLIC_REPAIRS), ...constraints)
-  return onSnapshot(q, (snap) => {
-    const items = snap.docs.map((d) => ({ id: d.id, ...d.data() }))
-    items.sort((a, b) => (b.createdAt?.toMillis?.() ?? 0) - (a.createdAt?.toMillis?.() ?? 0))
-    callback(items)
-  })
+  return onSnapshot(
+    q,
+    (snap) => {
+      const items = snap.docs.map((d) => ({ id: d.id, ...d.data() }))
+      items.sort((a, b) => (b.createdAt?.toMillis?.() ?? 0) - (a.createdAt?.toMillis?.() ?? 0))
+      callback(items)
+    },
+    onError,
+  )
 }
 
 /** บันทึกผลคัดแยก/ประเมิน (ไม่เปลี่ยนสถานะเอง — เรียก changeRepairStatus ต่อจากหน้าฟอร์ม) */
