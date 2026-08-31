@@ -107,7 +107,7 @@ export default function RepairList() {
             <img
               src={r.photosIntake?.itemPhotos?.[0]}
               alt={r.requester?.fullName}
-              className="h-36 w-full object-cover bg-orange-50"
+              className="h-36 w-full object-contain bg-orange-50"
             />
             <div className="p-3 space-y-1">
               <div className="flex items-start justify-between gap-2">

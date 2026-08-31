@@ -253,7 +253,7 @@ export default function Dashboard() {
                   <img
                     src={r.itemPhoto}
                     alt={categoryLabel(r)}
-                    className="h-28 w-full object-cover bg-orange-50"
+                    className="h-28 w-full object-contain bg-orange-50"
                   />
                   <div className="p-2.5 space-y-1">
                     <StatusBadge status={r.status} unrepairable={r.unrepairable} />

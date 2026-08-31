@@ -136,9 +136,9 @@ export default function RepairDetail() {
                 key={url}
                 type="button"
                 onClick={() => setLightboxUrl(url)}
-                className="h-24 w-full rounded-md overflow-hidden cursor-zoom-in"
+                className="h-28 w-full rounded-md overflow-hidden cursor-zoom-in bg-orange-50"
               >
-                <img src={url} alt="" className="h-full w-full object-cover" />
+                <img src={url} alt="" className="h-full w-full object-contain" />
               </button>
             ))}
           </div>
@@ -180,9 +180,9 @@ export default function RepairDetail() {
                 key={url}
                 type="button"
                 onClick={() => setLightboxUrl(url)}
-                className="h-24 w-full rounded-md overflow-hidden cursor-zoom-in"
+                className="h-28 w-full rounded-md overflow-hidden cursor-zoom-in bg-orange-50"
               >
-                <img src={url} alt="" className="h-full w-full object-cover" />
+                <img src={url} alt="" className="h-full w-full object-contain" />
               </button>
             ))}
           </div>

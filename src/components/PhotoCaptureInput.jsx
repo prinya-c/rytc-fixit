@@ -17,7 +17,7 @@ export default function PhotoCaptureInput({ label, file, onChange, capture = 'en
       </label>
       <label className="relative flex flex-col items-center justify-center gap-1 border-2 border-dashed border-orange-200 rounded-lg h-32 cursor-pointer bg-orange-50/60 hover:bg-orange-50 overflow-hidden text-primary">
         {previewUrl ? (
-          <img src={previewUrl} alt={label} className="h-full w-full object-cover" />
+          <img src={previewUrl} alt={label} className="h-full w-full object-contain" />
         ) : (
           <>
             <span className="text-3xl">📷</span>
