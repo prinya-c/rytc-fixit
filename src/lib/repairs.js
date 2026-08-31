@@ -133,7 +133,7 @@ export async function changeRepairStatus(
   })
 
   if (oldStatus !== newStatus) {
-    await recordStatusChange(oldStatus, newStatus)
+    await recordStatusChange(current.item?.category, oldStatus, newStatus)
   }
   if (isUnrepairable !== wasUnrepairable) {
     await recordUnrepairableChange(isUnrepairable ? 1 : -1)

@@ -1,56 +1,89 @@
-import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { useEffect, useMemo, useState } from 'react'
 import { STATUSES, ITEM_CATEGORIES } from '../lib/options'
 import { subscribeStats } from '../lib/stats'
 
 const CATEGORY_ICON = { tool_machine: '🔧', appliance: '🔌', vehicle: '🏍️', other: '📦' }
 
-function StatCard({ to, label, value, icon }) {
+function countFor(stats, category, statusCode) {
+  if (category && statusCode) {
+    return stats?.byCategoryStatus?.[category]?.[String(statusCode)] ?? 0
+  }
+  if (category) return stats?.byCategory?.[category] ?? 0
+  if (statusCode) return stats?.byStatus?.[String(statusCode)] ?? 0
+  return stats?.total ?? 0
+}
+
+function StatCard({ icon, label, value, active, onClick }) {
   return (
-    <Link
-      to={to}
-      className="bg-white rounded-xl shadow-sm border border-orange-100 p-4 flex items-center gap-3 hover:shadow-md hover:border-primary/40 transition-shadow"
+    <button
+      type="button"
+      onClick={onClick}
+      className={`text-left rounded-xl shadow-sm border p-4 flex items-center gap-3 transition-colors ${
+        active
+          ? 'bg-primary border-primary text-white'
+          : 'bg-white border-orange-100 hover:border-primary/40 hover:shadow-md'
+      }`}
     >
       <span className="text-2xl">{icon}</span>
       <div>
-        <p className="text-2xl font-bold text-slate-800">{value}</p>
-        <p className="text-sm text-slate-500">{label}</p>
+        <p className={`text-2xl font-bold ${active ? 'text-white' : 'text-slate-800'}`}>{value}</p>
+        <p className={`text-sm ${active ? 'text-white/90' : 'text-slate-500'}`}>{label}</p>
       </div>
-    </Link>
+    </button>
   )
 }
 
-function StatusCard({ status, count, maxCount }) {
+function StatusCard({ status, count, maxCount, active, onClick }) {
   const pct = Math.round((count / maxCount) * 100)
   return (
-    <Link
-      to={`/repairs?status=${status.code}`}
-      className="bg-white rounded-xl shadow-sm border border-orange-100 p-4 flex flex-col gap-2 hover:shadow-md hover:border-primary/40 transition-shadow"
+    <button
+      type="button"
+      onClick={onClick}
+      className={`text-left rounded-xl shadow-sm border p-4 flex flex-col gap-2 transition-colors ${
+        active ? 'bg-primary border-primary text-white' : 'bg-white border-orange-100 hover:border-primary/40 hover:shadow-md'
+      }`}
     >
       <div className="flex items-start justify-between gap-2">
-        <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary-light text-primary text-xs font-bold">
+        <span
+          className={`inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold ${
+            active ? 'bg-white/20 text-white' : 'bg-primary-light text-primary'
+          }`}
+        >
           {status.code}
         </span>
-        <span className="text-xl font-bold text-slate-800">{count}</span>
+        <span className={`text-xl font-bold ${active ? 'text-white' : 'text-slate-800'}`}>{count}</span>
       </div>
-      <p className="text-sm text-slate-600 leading-snug">{status.label}</p>
-      <div className="h-1.5 rounded-full bg-orange-50 mt-auto">
+      <p className={`text-sm leading-snug ${active ? 'text-white/90' : 'text-slate-600'}`}>{status.label}</p>
+      <div className={`h-1.5 rounded-full mt-auto ${active ? 'bg-white/20' : 'bg-orange-50'}`}>
         <div
-          className="h-1.5 rounded-full bg-primary transition-all"
+          className={`h-1.5 rounded-full transition-all ${active ? 'bg-white' : 'bg-primary'}`}
           style={{ width: `${count > 0 ? Math.max(pct, 4) : 0}%` }}
         />
       </div>
-    </Link>
+    </button>
   )
 }
 
 export default function Dashboard() {
   const [stats, setStats] = useState(null)
+  const [selectedCategory, setSelectedCategory] = useState('')
+  const [selectedStatus, setSelectedStatus] = useState(null)
 
   useEffect(() => subscribeStats(setStats), [])
 
-  const total = stats?.total ?? 0
-  const maxStatusCount = Math.max(1, ...STATUSES.map((s) => stats?.byStatus?.[String(s.code)] ?? 0))
+  const filteredTotal = countFor(stats, selectedCategory, selectedStatus)
+  const maxStatusCount = Math.max(
+    1,
+    ...STATUSES.map((s) => countFor(stats, selectedCategory, s.code)),
+  )
+  const hasFilter = selectedCategory || selectedStatus
+
+  const filterLabel = useMemo(() => {
+    const parts = []
+    if (selectedCategory) parts.push(ITEM_CATEGORIES.find((c) => c.value === selectedCategory)?.label)
+    if (selectedStatus) parts.push(`สถานะ ${selectedStatus}. ${STATUSES.find((s) => s.code === selectedStatus)?.label}`)
+    return parts.join(' × ')
+  }, [selectedCategory, selectedStatus])
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8 space-y-8">
@@ -63,17 +96,44 @@ export default function Dashboard() {
         </p>
       </section>
 
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <h2 className="text-lg font-semibold text-slate-700">
+          {hasFilter ? `กำลังกรอง: ${filterLabel}` : 'สรุปงานซ่อมทั้งหมด'}
+        </h2>
+        {hasFilter && (
+          <button
+            type="button"
+            onClick={() => {
+              setSelectedCategory('')
+              setSelectedStatus(null)
+            }}
+            className="text-sm text-primary hover:underline"
+          >
+            ✕ ล้างตัวกรอง (ดูทั้งหมด {stats?.total ?? 0} รายการ)
+          </button>
+        )}
+      </div>
+
       <section>
-        <h2 className="text-lg font-semibold text-slate-700 mb-3">สรุปงานซ่อมทั้งหมด</h2>
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-          <StatCard to="/repairs" label="รายการทั้งหมด" value={total} icon="🗂️" />
+          <StatCard
+            icon="🗂️"
+            label={hasFilter ? 'รวมตามตัวกรอง' : 'รายการทั้งหมด'}
+            value={filteredTotal}
+            active={false}
+            onClick={() => {
+              setSelectedCategory('')
+              setSelectedStatus(null)
+            }}
+          />
           {ITEM_CATEGORIES.map((c) => (
             <StatCard
               key={c.value}
-              to={`/repairs?category=${c.value}`}
-              label={c.label}
-              value={stats?.byCategory?.[c.value] ?? 0}
               icon={CATEGORY_ICON[c.value]}
+              label={c.label}
+              value={countFor(stats, c.value, selectedStatus)}
+              active={selectedCategory === c.value}
+              onClick={() => setSelectedCategory((prev) => (prev === c.value ? '' : c.value))}
             />
           ))}
         </div>
@@ -86,8 +146,10 @@ export default function Dashboard() {
             <StatusCard
               key={s.code}
               status={s}
-              count={stats?.byStatus?.[String(s.code)] ?? 0}
+              count={countFor(stats, selectedCategory, s.code)}
               maxCount={maxStatusCount}
+              active={selectedStatus === s.code}
+              onClick={() => setSelectedStatus((prev) => (prev === s.code ? null : s.code))}
             />
           ))}
         </div>
@@ -99,7 +161,7 @@ export default function Dashboard() {
       </section>
 
       <p className="text-xs text-slate-400 text-center">
-        คลิกการ์ดเพื่อดูรายการที่เกี่ยวข้อง (ต้องเข้าสู่ระบบเจ้าหน้าที่ก่อน)
+        คลิกการ์ดเพื่อเจาะลึกตัวเลข (กดซ้ำ หรือกด "ล้างตัวกรอง" เพื่อกลับไปดูภาพรวม)
       </p>
     </div>
   )
