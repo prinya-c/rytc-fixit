@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import StatusBadge from '../components/StatusBadge'
+import { useAuth } from '../context/AuthContext'
 import { STATUSES, ITEM_CATEGORIES, VEHICLE_TYPES } from '../lib/options'
-import { subscribePublicRepairs } from '../lib/repairs'
+import { backfillPublicRepairs, subscribePublicRepairs } from '../lib/repairs'
 import { subscribeStats } from '../lib/stats'
 
 const CATEGORY_ICON = { tool_machine: '🔧', appliance: '🔌', vehicle: '🏍️', other: '📦' }
@@ -81,6 +82,7 @@ function StatusCard({ status, count, maxCount, active, onClick }) {
 }
 
 export default function Dashboard() {
+  const { staffProfile } = useAuth()
   const [stats, setStats] = useState(null)
   const [selectedCategory, setSelectedCategory] = useState('')
   const [selectedStatus, setSelectedStatus] = useState(null)
@@ -89,6 +91,8 @@ export default function Dashboard() {
   // true ตั้งแต่แตะการ์ดใบแรก (รวมการ์ด "รายการทั้งหมด" ด้วย) — ต่างจาก hasFilter
   // ตรงที่ "รายการทั้งหมด" ก็ต้องโชว์รายการจริงเหมือนกัน ไม่ใช่แค่ตัวกรองเฉพาะเจาะจง
   const [interacted, setInteracted] = useState(false)
+  const [backfilling, setBackfilling] = useState(false)
+  const [backfillResult, setBackfillResult] = useState('')
 
   useEffect(() => subscribeStats(setStats), [])
 
@@ -121,6 +125,19 @@ export default function Dashboard() {
     if (selectedStatus) parts.push(`สถานะ ${selectedStatus}. ${STATUSES.find((s) => s.code === selectedStatus)?.label}`)
     return parts.join(' × ')
   }, [selectedCategory, selectedStatus])
+
+  async function handleBackfill() {
+    setBackfilling(true)
+    setBackfillResult('')
+    try {
+      const count = await backfillPublicRepairs()
+      setBackfillResult(`ซิงก์แล้ว ${count} รายการ`)
+    } catch (err) {
+      setBackfillResult(err.message || 'ซิงก์ไม่สำเร็จ')
+    } finally {
+      setBackfilling(false)
+    }
+  }
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8 space-y-8">
@@ -254,6 +271,20 @@ export default function Dashboard() {
         <p className="text-xs text-slate-400 text-center">
           คลิกการ์ดใดก็ได้ (รวมถึง "รายการทั้งหมด") เพื่อดูรายการจริงที่ตรงกับการ์ดนั้น
         </p>
+      )}
+
+      {staffProfile && (
+        <div className="text-center space-y-1">
+          <button
+            type="button"
+            onClick={handleBackfill}
+            disabled={backfilling}
+            className="text-xs text-slate-400 hover:text-primary underline disabled:opacity-60"
+          >
+            {backfilling ? 'กำลังซิงก์...' : 'ซิงก์รายการเก่าเข้า Dashboard (สำหรับเจ้าหน้าที่)'}
+          </button>
+          {backfillResult && <p className="text-xs text-slate-400">{backfillResult}</p>}
+        </div>
       )}
     </div>
   )

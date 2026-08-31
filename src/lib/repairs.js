@@ -139,6 +139,34 @@ export function subscribePublicRepairs({ category, status } = {}, callback, onEr
   )
 }
 
+/**
+ * เติม publicRepairs ให้รายการเก่าที่สร้างไว้ก่อนฟีเจอร์นี้จะมีอยู่ (เลยไม่เคยมีคู่ใน
+ * publicRepairs) เรียกใช้ครั้งเดียวพอ ทำซ้ำได้เรื่อยๆ อย่างปลอดภัย (setDoc ทับด้วยข้อมูลปัจจุบัน
+ * จาก repairs เสมอ) คืนค่าจำนวนรายการที่เติมให้
+ */
+export async function backfillPublicRepairs() {
+  const snap = await getDocs(collection(db, REPAIRS))
+  let count = 0
+  await Promise.all(
+    snap.docs.map(async (d) => {
+      const data = d.data()
+      await setDoc(
+        doc(db, PUBLIC_REPAIRS, d.id),
+        publicRepairFields({
+          item: data.item,
+          status: data.status,
+          unrepairable: data.unrepairable,
+          itemPhoto: data.photosIntake?.itemPhotos?.[0],
+          createdAt: data.createdAt,
+          updatedAt: data.updatedAt,
+        }),
+      )
+      count += 1
+    }),
+  )
+  return count
+}
+
 /** บันทึกผลคัดแยก/ประเมิน (ไม่เปลี่ยนสถานะเอง — เรียก changeRepairStatus ต่อจากหน้าฟอร์ม) */
 export async function saveAssessment(repairId, { inspectionNotes, damageLevel, staffUid, staffName }) {
   await updateDoc(doc(db, REPAIRS, repairId), {
