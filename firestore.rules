@@ -9,10 +9,13 @@ rules_version = '2';
 // but that's client-side and can be bypassed, so isStaff() re-checks the
 // email domain from the ID token on every request.
 //
-// `stats/summary` is the one deliberate exception: it holds only aggregate
-// counts (no personal data) so the public Dashboard can read it without
-// login, per product decision. Everything else (repairs + subcollections,
-// staff profiles) requires an authenticated @technicrayong.ac.th account.
+// `stats/summary` and `publicRepairs/{repairId}` are the deliberate
+// exceptions: they hold only non-personal fields (no name, national ID,
+// phone, or person photo — see repairs.js for exactly what's copied into
+// publicRepairs) so the public Dashboard can drill down into real matching
+// records without login, per product decision. The full `repairs` doc
+// (everything else here) requires an authenticated @technicrayong.ac.th
+// account.
 service cloud.firestore {
   match /databases/{database}/documents {
     function isStaff() {
@@ -34,6 +37,11 @@ service cloud.firestore {
     }
 
     match /stats/{docId} {
+      allow read: if true;
+      allow write: if isStaff();
+    }
+
+    match /publicRepairs/{repairId} {
       allow read: if true;
       allow write: if isStaff();
     }

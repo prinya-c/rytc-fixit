@@ -1,8 +1,24 @@
 import { useEffect, useMemo, useState } from 'react'
-import { STATUSES, ITEM_CATEGORIES } from '../lib/options'
+import StatusBadge from '../components/StatusBadge'
+import { STATUSES, ITEM_CATEGORIES, VEHICLE_TYPES } from '../lib/options'
+import { subscribePublicRepairs } from '../lib/repairs'
 import { subscribeStats } from '../lib/stats'
 
 const CATEGORY_ICON = { tool_machine: '🔧', appliance: '🔌', vehicle: '🏍️', other: '📦' }
+
+function categoryLabel(item) {
+  const cat = ITEM_CATEGORIES.find((c) => c.value === item.category)?.label ?? item.category
+  if (item.category === 'vehicle') {
+    const v = VEHICLE_TYPES.find((t) => t.value === item.vehicleType)?.label
+    return v ? `${cat} (${v})` : cat
+  }
+  return cat
+}
+
+function formatDate(ts) {
+  if (!ts?.toDate) return '-'
+  return ts.toDate().toLocaleDateString('th-TH', { dateStyle: 'medium' })
+}
 
 function countFor(stats, category, statusCode) {
   if (category && statusCode) {
@@ -68,15 +84,29 @@ export default function Dashboard() {
   const [stats, setStats] = useState(null)
   const [selectedCategory, setSelectedCategory] = useState('')
   const [selectedStatus, setSelectedStatus] = useState(null)
+  const [drilldownItems, setDrilldownItems] = useState(null)
 
   useEffect(() => subscribeStats(setStats), [])
+
+  const hasFilter = Boolean(selectedCategory || selectedStatus)
+
+  useEffect(() => {
+    if (!hasFilter) {
+      setDrilldownItems(null)
+      return undefined
+    }
+    setDrilldownItems(null)
+    return subscribePublicRepairs(
+      { category: selectedCategory || undefined, status: selectedStatus || undefined },
+      setDrilldownItems,
+    )
+  }, [selectedCategory, selectedStatus, hasFilter])
 
   const filteredTotal = countFor(stats, selectedCategory, selectedStatus)
   const maxStatusCount = Math.max(
     1,
     ...STATUSES.map((s) => countFor(stats, selectedCategory, s.code)),
   )
-  const hasFilter = selectedCategory || selectedStatus
 
   const filterLabel = useMemo(() => {
     const parts = []
@@ -159,6 +189,40 @@ export default function Dashboard() {
           </p>
         )}
       </section>
+
+      {hasFilter && (
+        <section className="bg-white rounded-2xl shadow-sm border border-orange-100 p-6">
+          <h2 className="text-lg font-semibold text-slate-700 mb-1">รายการที่ตรงกับตัวกรอง</h2>
+          <p className="text-xs text-slate-400 mb-4">
+            แสดงเฉพาะรูปสิ่งของ ประเภท และสถานะ — ไม่มีชื่อ เบอร์โทร หรือข้อมูลส่วนบุคคลของผู้ขอรับบริการ
+          </p>
+          {drilldownItems === null && <p className="text-slate-400 text-center py-6">กำลังโหลด...</p>}
+          {drilldownItems !== null && drilldownItems.length === 0 && (
+            <p className="text-slate-400 text-center py-6">ไม่พบรายการที่ตรงกับตัวกรองนี้</p>
+          )}
+          {drilldownItems !== null && drilldownItems.length > 0 && (
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+              {drilldownItems.map((r) => (
+                <div
+                  key={r.id}
+                  className="rounded-xl border border-orange-100 overflow-hidden bg-white"
+                >
+                  <img
+                    src={r.itemPhoto}
+                    alt={categoryLabel(r)}
+                    className="h-28 w-full object-cover bg-orange-50"
+                  />
+                  <div className="p-2.5 space-y-1">
+                    <StatusBadge status={r.status} unrepairable={r.unrepairable} />
+                    <p className="text-sm text-slate-700">{categoryLabel(r)}</p>
+                    <p className="text-xs text-slate-400">ลงทะเบียน {formatDate(r.createdAt)}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+      )}
 
       <p className="text-xs text-slate-400 text-center">
         คลิกการ์ดเพื่อเจาะลึกตัวเลข (กดซ้ำ หรือกด "ล้างตัวกรอง" เพื่อกลับไปดูภาพรวม)

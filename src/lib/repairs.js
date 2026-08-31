@@ -11,6 +11,7 @@ import {
   serverTimestamp,
   setDoc,
   updateDoc,
+  where,
 } from 'firebase/firestore'
 import { db } from './firebase'
 import { statusLabel } from './options'
@@ -18,6 +19,27 @@ import { deleteRepairPhotos } from './storageUpload'
 import { recordDeleteRepair, recordNewRepair, recordStatusChange, recordUnrepairableChange } from './stats'
 
 const REPAIRS = 'repairs'
+const PUBLIC_REPAIRS = 'publicRepairs'
+
+/**
+ * publicRepairs/{repairId} คือสำเนาแบบ "ปลอดข้อมูลส่วนบุคคล" ของ repairs/{repairId}
+ * เก็บเฉพาะ category, vehicleType, status, unrepairable, รูปสิ่งของ 1 รูป, วันที่ —
+ * ไม่มีชื่อ/เบอร์โทร/เลขบัตรประชาชน/รูปคน เพื่อให้ Dashboard สาธารณะ query แสดงรายการจริง
+ * (ไม่ใช่แค่ตัวเลขสรุป) ได้โดยไม่ต้องล็อกอิน — ดู firestore.rules ที่เปิด read สาธารณะไว้เฉพาะ
+ * collection นี้ (นอกเหนือจาก stats/summary)
+ */
+function publicRepairFields({ item, status, unrepairable, itemPhoto, createdAt, updatedAt }) {
+  return {
+    category: item.category,
+    vehicleType: item.vehicleType ?? null,
+    status,
+    statusLabel: statusLabel(status),
+    unrepairable: !!unrepairable,
+    itemPhoto: itemPhoto ?? null,
+    createdAt,
+    updatedAt,
+  }
+}
 
 /** สุ่ม id ล่วงหน้าก่อนสร้างเอกสารจริง ใช้เป็น path อัปโหลดรูปใน Storage ก่อน save เอกสาร */
 export function newRepairId() {
@@ -56,6 +78,17 @@ export async function createRepair(
     changedByName: staffName,
     changedAt: now,
   })
+  await setDoc(
+    doc(db, PUBLIC_REPAIRS, repairId),
+    publicRepairFields({
+      item,
+      status: 1,
+      unrepairable: false,
+      itemPhoto: photosIntake?.itemPhotos?.[0],
+      createdAt: now,
+      updatedAt: now,
+    }),
+  )
   await recordNewRepair(item.category)
   return ref.id
 }
@@ -82,6 +115,23 @@ export function subscribeStatusLogs(repairId, callback) {
   const q = query(collection(db, REPAIRS, repairId, 'statusLogs'), orderBy('changedAt', 'desc'))
   return onSnapshot(q, (snap) => {
     callback(snap.docs.map((d) => ({ id: d.id, ...d.data() })))
+  })
+}
+
+/**
+ * ใช้โดย Dashboard สาธารณะ (ไม่ต้องล็อกอิน) เพื่อ drilldown เห็นรายการจริงที่ตรงกับการ์ดที่คลิก
+ * ไม่มี orderBy ในตัว query เอง เพื่อเลี่ยงต้องสร้าง composite index — เรียงลำดับฝั่ง client แทน
+ * (จำนวนรายการต่อศูนย์ซ่อมหนึ่งแห่งไม่มากพอที่จะมีปัญหาประสิทธิภาพ)
+ */
+export function subscribePublicRepairs({ category, status } = {}, callback) {
+  const constraints = []
+  if (category) constraints.push(where('category', '==', category))
+  if (status) constraints.push(where('status', '==', status))
+  const q = query(collection(db, PUBLIC_REPAIRS), ...constraints)
+  return onSnapshot(q, (snap) => {
+    const items = snap.docs.map((d) => ({ id: d.id, ...d.data() }))
+    items.sort((a, b) => (b.createdAt?.toMillis?.() ?? 0) - (a.createdAt?.toMillis?.() ?? 0))
+    callback(items)
   })
 }
 
@@ -132,6 +182,13 @@ export async function changeRepairStatus(
     changedAt: serverTimestamp(),
   })
 
+  await updateDoc(doc(db, PUBLIC_REPAIRS, repairId), {
+    status: newStatus,
+    statusLabel: statusLabel(newStatus),
+    unrepairable: isUnrepairable,
+    updatedAt: serverTimestamp(),
+  })
+
   if (oldStatus !== newStatus) {
     await recordStatusChange(current.item?.category, oldStatus, newStatus)
   }
@@ -175,6 +232,7 @@ export async function deleteRepair(repairId) {
 
   await deleteRepairPhotos(repairId)
   await deleteDoc(ref)
+  await deleteDoc(doc(db, PUBLIC_REPAIRS, repairId))
 
   await recordDeleteRepair({
     category: data.item?.category,
