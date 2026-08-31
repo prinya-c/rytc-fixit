@@ -168,14 +168,39 @@ export async function backfillPublicRepairs() {
 }
 
 /** บันทึกผลคัดแยก/ประเมิน (ไม่เปลี่ยนสถานะเอง — เรียก changeRepairStatus ต่อจากหน้าฟอร์ม) */
-export async function saveAssessment(repairId, { inspectionNotes, damageLevel, staffUid, staffName }) {
+export async function saveAssessment(repairId, { inspectionNotes, damageLevel, causeNote, staffUid, staffName }) {
   await updateDoc(doc(db, REPAIRS, repairId), {
     assessment: {
       inspectionNotes,
       damageLevel,
+      causeNote: causeNote || null,
       assessedByUid: staffUid,
       assessedByName: staffName,
       assessedAt: serverTimestamp(),
+    },
+    updatedAt: serverTimestamp(),
+  })
+}
+
+/**
+ * บันทึกข้อมูลผู้ดำเนินการซ่อม/ตรวจเช็ค — กรอกตอนอัปเดตสถานะเป็น "ตรวจสอบคุณภาพ" (7)
+ * เก็บแยกต่างหากจาก staff/{uid} เพราะเป็นข้อมูลเฉพาะรายการนี้ (ช่างที่ลงมือซ่อมจริง
+ * อาจไม่ใช่คนเดียวกับที่ล็อกอินกดปุ่มอัปเดตสถานะ) ไม่ใช่ข้อมูลโปรไฟล์ถาวรของเจ้าหน้าที่
+ */
+export async function saveQualityCheck(
+  repairId,
+  { technicianName, technicianNationalId, department, supervisingTeacher, repairDetails, staffUid, staffName },
+) {
+  await updateDoc(doc(db, REPAIRS, repairId), {
+    qualityCheck: {
+      technicianName: technicianName || null,
+      technicianNationalId: technicianNationalId || null,
+      department: department || null,
+      supervisingTeacher: supervisingTeacher || null,
+      repairDetails: repairDetails || null,
+      checkedByUid: staffUid,
+      checkedByName: staffName,
+      checkedAt: serverTimestamp(),
     },
     updatedAt: serverTimestamp(),
   })

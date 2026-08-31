@@ -75,6 +75,11 @@ export default function RepairForm() {
   const [fullName, setFullName] = useState('')
   const [nationalId, setNationalId] = useState('')
   const [phone, setPhone] = useState('')
+  const [houseNo, setHouseNo] = useState('')
+  const [moo, setMoo] = useState('')
+  const [subDistrict, setSubDistrict] = useState('')
+  const [district, setDistrict] = useState('')
+  const [province, setProvince] = useState('')
 
   const [category, setCategory] = useState('')
   const [vehicleType, setVehicleType] = useState('')
@@ -129,7 +134,16 @@ export default function RepairForm() {
       ])
 
       await createRepair(repairId, {
-        requester: { fullName: fullName.trim(), nationalId: nationalId.trim(), phone: phone.trim() },
+        requester: {
+          fullName: fullName.trim(),
+          nationalId: nationalId.trim(),
+          phone: phone.trim(),
+          houseNo: houseNo.trim() || null,
+          moo: moo.trim() || null,
+          subDistrict: subDistrict.trim() || null,
+          district: district.trim() || null,
+          province: province.trim() || null,
+        },
         item: {
           category,
           vehicleType: category === 'vehicle' ? vehicleType : null,
@@ -196,6 +210,29 @@ export default function RepairForm() {
                 className={inputClass}
               />
             </div>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">บ้านเลขที่</label>
+              <input value={houseNo} onChange={(e) => setHouseNo(e.target.value)} className={inputClass} />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">หมู่ที่</label>
+              <input value={moo} onChange={(e) => setMoo(e.target.value)} className={inputClass} />
+            </div>
+            <div className="col-span-2 sm:col-span-1">
+              <label className="block text-sm font-medium text-slate-700 mb-1">ตำบล</label>
+              <input value={subDistrict} onChange={(e) => setSubDistrict(e.target.value)} className={inputClass} />
+            </div>
+            <div className="col-span-2 sm:col-span-1">
+              <label className="block text-sm font-medium text-slate-700 mb-1">อำเภอ</label>
+              <input value={district} onChange={(e) => setDistrict(e.target.value)} className={inputClass} />
+            </div>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">จังหวัด</label>
+            <input value={province} onChange={(e) => setProvince(e.target.value)} className={inputClass} />
           </div>
         </Section>
 

@@ -53,7 +53,8 @@ staff/{uid}                          // doc id = Firebase Auth uid, สร้า
   createdAt: timestamp
 
 repairs/{repairId}
-  requester: { fullName, nationalId, phone }
+  requester: { fullName, nationalId, phone,
+               houseNo?, moo?, subDistrict?, district?, province? }
   item: { category, vehicleType?, otherDetail?, registrationNo? }
   intakeCondition: { symptoms[], symptomOtherDetail?, condition[], conditionOtherDetail?,
                       accessories[], accessoryOtherDetail? }
@@ -63,18 +64,34 @@ repairs/{repairId}
   statusLabel: string
   unrepairable: boolean
   unrepairableReason?, unrepairableNote?: string
-  assessment?: { inspectionNotes, damageLevel, assessedByUid, assessedByName, assessedAt }
+  assessment?: { inspectionNotes, damageLevel, causeNote?, assessedByUid, assessedByName, assessedAt }
+  qualityCheck?: { technicianName, technicianNationalId?, department?, supervisingTeacher?,
+                    repairDetails?, checkedByUid, checkedByName, checkedAt }
+                 // กรอกตอนอัปเดตสถานะเป็น "ตรวจสอบคุณภาพ" (7) — ใช้พิมพ์ใบรายงานซ่อม
   closure?: { itemPhoto, personPhoto, receiverName, receiverRelation?, closedByUid,
               closedByName, closedAt }
   createdAt, updatedAt: timestamp
 
 repairs/{repairId}/statusLogs/{logId}   // ประวัติการเปลี่ยนสถานะทุกครั้ง
   status, statusLabel, note?, reasonNote?, changedByUid, changedByName, changedAt
+  // log แรกที่ status อยู่ใน 4/5/6 ใช้เป็น "วันที่เริ่มซ่อม" ในใบรายงานซ่อม (ไม่มีฟิลด์แยก)
+
+publicRepairs/{repairId}             // สำเนาไม่มี PII ของ repairs/{repairId}, อ่านสาธารณะได้
+  category, vehicleType?, status, statusLabel, unrepairable, itemPhoto, createdAt, updatedAt
 
 stats/summary                        // doc เดียว, อ่านได้แบบสาธารณะ (ไม่มีข้อมูลส่วนบุคคล)
   total, byCategory: { tool_machine, appliance, vehicle, other },
-  byStatus: { '1': n, ..., '8': n }, unrepairableCount, updatedAt
+  byStatus: { '1': n, ..., '8': n },
+  byCategoryStatus: { [category]: { '1': n, ..., '8': n } },  // ใช้ทำ drilldown แบบไขว้กัน
+  unrepairableCount, updatedAt
 ```
+
+## ใบรายงานซ่อม (`/repairs/:id/report`)
+
+ปุ่ม "พิมพ์ใบรายงานซ่อม" จะโผล่ในหน้ารายละเอียดเฉพาะเมื่อสถานะ = **ส่งมอบ (8)** เท่านั้น
+ออกแบบตามฟอร์มกระดาษเดิมของศูนย์ (A4 แนวตั้ง หน้าเดียว) — ฟิลด์ที่ derive จากข้อมูลอื่นแทนที่จะ
+เก็บแยก: ปีงบประมาณ (คำนวณจากวันที่ลงทะเบียน), วันที่เริ่มซ่อม (จาก `statusLogs` log แรกที่เข้า
+สถานะซ่อม 4/5/6), วันที่ซ่อมเสร็จ (จาก `qualityCheck.checkedAt`)
 
 **Storage** (`fixit/{repairId}/...`): `intake/item-1.jpg`, `intake/item-2.jpg`,
 `intake/person.jpg`, `closure/item.jpg`, `closure/person.jpg`

@@ -14,6 +14,7 @@ export default function RepairAssess() {
 
   const [repair, setRepair] = useState(undefined)
   const [inspectionNotes, setInspectionNotes] = useState('')
+  const [causeNote, setCauseNote] = useState('')
   const [damageLevel, setDamageLevel] = useState('minor')
   const [nextStatus, setNextStatus] = useState(3)
   const [unrepairable, setUnrepairable] = useState(false)
@@ -41,6 +42,7 @@ export default function RepairAssess() {
       await saveAssessment(id, {
         inspectionNotes,
         damageLevel,
+        causeNote,
         staffUid: user.uid,
         staffName: staffProfile.fullName,
       })
@@ -88,6 +90,17 @@ export default function RepairAssess() {
             rows={3}
             value={inspectionNotes}
             onChange={(e) => setInspectionNotes(e.target.value)}
+            className={inputClass}
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-slate-700 mb-1">สาเหตุเกิดจาก</label>
+          <textarea
+            rows={2}
+            placeholder="เช่น ใช้งานมานาน, แช่น้ำท่วม, ขาดการบำรุงรักษา"
+            value={causeNote}
+            onChange={(e) => setCauseNote(e.target.value)}
             className={inputClass}
           />
         </div>

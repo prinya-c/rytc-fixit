@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { changeRepairStatus, subscribeRepair } from '../lib/repairs'
+import { changeRepairStatus, saveQualityCheck, subscribeRepair } from '../lib/repairs'
 import { STATUSES, UNREPAIRABLE_REASONS, suggestRepairStatus } from '../lib/options'
 
 const inputClass =
@@ -26,6 +26,13 @@ export default function RepairStatus() {
   const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
 
+  // ฟิลด์เพิ่มเติมสำหรับใบรายงานซ่อม — กรอกเฉพาะตอนย้ายไปสถานะ "ตรวจสอบคุณภาพ" (7)
+  const [technicianName, setTechnicianName] = useState('')
+  const [technicianNationalId, setTechnicianNationalId] = useState('')
+  const [department, setDepartment] = useState('')
+  const [supervisingTeacher, setSupervisingTeacher] = useState('')
+  const [repairDetails, setRepairDetails] = useState('')
+
   useEffect(() => {
     const unsub = subscribeRepair(id, (data) => {
       setRepair(data)
@@ -41,11 +48,31 @@ export default function RepairStatus() {
   if (repair === undefined) return <p className="text-center text-slate-400 py-10">กำลังโหลด...</p>
   if (repair === null) return <p className="text-center text-danger py-10">ไม่พบรายการนี้</p>
 
+  const isQualityCheck = String(nextStatus) === '7'
+
+  function handleNextStatusChange(value) {
+    setNextStatus(value)
+    if (String(value) === '7' && !technicianName) {
+      setTechnicianName(staffProfile.fullName)
+    }
+  }
+
   async function handleSubmit(e) {
     e.preventDefault()
     setError('')
     setSubmitting(true)
     try {
+      if (isQualityCheck) {
+        await saveQualityCheck(id, {
+          technicianName,
+          technicianNationalId,
+          department,
+          supervisingTeacher,
+          repairDetails,
+          staffUid: user.uid,
+          staffName: staffProfile.fullName,
+        })
+      }
       await changeRepairStatus(id, {
         newStatus: Number(nextStatus),
         note,
@@ -77,7 +104,11 @@ export default function RepairStatus() {
 
         <div>
           <label className="block text-sm font-medium text-slate-700 mb-1">สถานะใหม่</label>
-          <select value={nextStatus} onChange={(e) => setNextStatus(e.target.value)} className={inputClass}>
+          <select
+            value={nextStatus}
+            onChange={(e) => handleNextStatusChange(e.target.value)}
+            className={inputClass}
+          >
             {STATUSES.map((s) => (
               <option key={s.code} value={s.code}>
                 {s.code}. {s.label}
@@ -90,6 +121,61 @@ export default function RepairStatus() {
           <label className="block text-sm font-medium text-slate-700 mb-1">บันทึกเพิ่มเติม</label>
           <textarea rows={2} value={note} onChange={(e) => setNote(e.target.value)} className={inputClass} />
         </div>
+
+        {isQualityCheck && (
+          <div className="space-y-3 rounded-md bg-orange-50 border border-orange-200 p-3">
+            <p className="text-sm font-medium text-slate-700">
+              ข้อมูลผู้ดำเนินการซ่อม/ตรวจเช็ค (สำหรับพิมพ์ใบรายงานซ่อมตอนปิดงาน)
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-medium text-slate-600 mb-1">ชื่อ-นามสกุล</label>
+                <input
+                  value={technicianName}
+                  onChange={(e) => setTechnicianName(e.target.value)}
+                  className={inputClass}
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-slate-600 mb-1">เลขบัตรประชาชน</label>
+                <input
+                  value={technicianNationalId}
+                  onChange={(e) => setTechnicianNationalId(e.target.value.replace(/\D/g, ''))}
+                  inputMode="numeric"
+                  maxLength={13}
+                  className={inputClass}
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-slate-600 mb-1">สาขาวิชา</label>
+                <input
+                  placeholder="เช่น ช่างยนต์, ช่างไฟฟ้า"
+                  value={department}
+                  onChange={(e) => setDepartment(e.target.value)}
+                  className={inputClass}
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-slate-600 mb-1">ครูสาขาวิชา</label>
+                <input
+                  value={supervisingTeacher}
+                  onChange={(e) => setSupervisingTeacher(e.target.value)}
+                  className={inputClass}
+                />
+              </div>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-slate-600 mb-1">รายละเอียดการซ่อม</label>
+              <textarea
+                rows={3}
+                placeholder="สรุปสิ่งที่ซ่อม/เปลี่ยนอะไหล่/แก้ไขอะไรไปบ้าง"
+                value={repairDetails}
+                onChange={(e) => setRepairDetails(e.target.value)}
+                className={inputClass}
+              />
+            </div>
+          </div>
+        )}
 
         <label className="flex items-center gap-2 text-sm text-slate-700">
           <input

@@ -9,6 +9,7 @@ import RepairList from './pages/RepairList'
 import RepairForm from './pages/RepairForm'
 import RepairDetail from './pages/RepairDetail'
 import RepairPrint from './pages/RepairPrint'
+import RepairReport from './pages/RepairReport'
 import RepairAssess from './pages/RepairAssess'
 import RepairStatus from './pages/RepairStatus'
 import RepairClose from './pages/RepairClose'
@@ -32,6 +33,7 @@ export default function App() {
               <Route path="/repairs/new" element={withPrivate(<RepairForm />)} />
               <Route path="/repairs/:id" element={withPrivate(<RepairDetail />)} />
               <Route path="/repairs/:id/print" element={withPrivate(<RepairPrint />)} />
+              <Route path="/repairs/:id/report" element={withPrivate(<RepairReport />)} />
               <Route path="/repairs/:id/assess" element={withPrivate(<RepairAssess />)} />
               <Route path="/repairs/:id/status" element={withPrivate(<RepairStatus />)} />
               <Route path="/repairs/:id/close" element={withPrivate(<RepairClose />)} />

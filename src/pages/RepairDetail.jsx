@@ -93,6 +93,14 @@ export default function RepairDetail() {
         >
           ปิดงาน/ส่งมอบ
         </Link>
+        {repair.status === 8 && (
+          <Link
+            to={`/repairs/${id}/report`}
+            className="rounded-md bg-success hover:bg-success-hover text-white px-3 py-2 text-sm font-medium"
+          >
+            🖨️ พิมพ์ใบรายงานซ่อม
+          </Link>
+        )}
         <button
           onClick={handleDelete}
           disabled={deleting}
