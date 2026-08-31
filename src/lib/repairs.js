@@ -41,9 +41,26 @@ function publicRepairFields({ item, status, unrepairable, itemPhoto, createdAt, 
   }
 }
 
-/** สุ่ม id ล่วงหน้าก่อนสร้างเอกสารจริง ใช้เป็น path อัปโหลดรูปใน Storage ก่อน save เอกสาร */
-export function newRepairId() {
-  return doc(collection(db, REPAIRS)).id
+function pad2(n) {
+  return String(n).padStart(2, '0')
+}
+
+/**
+ * สร้าง repair id จาก "เลขบัตรประชาชน-dd-mm-yyyy-HH-mm-ss" (เวลาเครื่อง ณ ตอนกดบันทึก)
+ * ใช้เป็นทั้ง Firestore doc id, path รูปใน Storage (fixit/{repairId}/...), และเนื้อหาใน QR Code
+ * ต้องเรียกก่อนอัปโหลดรูป/สร้างเอกสารจริง เพื่อให้ path สอดคล้องกันทั้งหมด
+ */
+export function buildRepairId(nationalId) {
+  const d = new Date()
+  const stamp = [
+    pad2(d.getDate()),
+    pad2(d.getMonth() + 1),
+    d.getFullYear(),
+    pad2(d.getHours()),
+    pad2(d.getMinutes()),
+    pad2(d.getSeconds()),
+  ].join('-')
+  return `${nationalId}-${stamp}`
 }
 
 /** สร้างรายการลงทะเบียนซ่อมใหม่ พร้อมสถานะเริ่มต้น "รับลงทะเบียน" และ log แรก */
@@ -52,7 +69,15 @@ export async function createRepair(
   { requester, item, intakeCondition, photosIntake, staffUid, staffName, staffPhone },
 ) {
   const ref = doc(db, REPAIRS, repairId)
+  const existing = await getDoc(ref)
+  if (existing.exists()) {
+    throw new Error('รหัสรายการนี้ถูกใช้ไปแล้ว (อาจกดบันทึกซ้ำในวินาทีเดียวกัน) กรุณาลองใหม่อีกครั้ง')
+  }
   const now = serverTimestamp()
+  // publicId เป็นคนละค่ากับ repairId โดยตั้งใจ — repairId ตอนนี้ขึ้นต้นด้วยเลขบัตรประชาชน
+  // ผู้ขอรับบริการ ถ้าใช้ค่าเดียวกันเป็น doc id ของ publicRepairs (ซึ่งเปิดอ่านสาธารณะ) เลขบัตร
+  // ประชาชนจะรั่วออกไปทาง document id แม้ในตัวฟิลด์จะไม่มีข้อมูลนี้อยู่ก็ตาม
+  const publicId = doc(collection(db, PUBLIC_REPAIRS)).id
   await setDoc(ref, {
     requester,
     item,
@@ -66,6 +91,7 @@ export async function createRepair(
     unrepairableNote: null,
     assessment: null,
     closure: null,
+    publicId,
     createdAt: now,
     updatedAt: now,
   })
@@ -79,7 +105,7 @@ export async function createRepair(
     changedAt: now,
   })
   await setDoc(
-    doc(db, PUBLIC_REPAIRS, repairId),
+    doc(db, PUBLIC_REPAIRS, publicId),
     publicRepairFields({
       item,
       status: 1,
@@ -150,8 +176,19 @@ export async function backfillPublicRepairs() {
   await Promise.all(
     snap.docs.map(async (d) => {
       const data = d.data()
+      // รายการเก่าก่อนมีฟิลด์ publicId — สุ่มให้ใหม่แล้วบันทึกกลับเข้า repairs ให้ครบ
+      // (repairId เดิมของรายการเก่าไม่มีเลขบัตรประชาชนปนอยู่ ใช้แทนกันชั่วคราวได้ แต่ใส่
+      // publicId จริงให้ครบไปเลยจะได้สอดคล้องกับรายการใหม่ในระยะยาว)
+      let publicId = data.publicId
+      if (!publicId) {
+        publicId = doc(collection(db, PUBLIC_REPAIRS)).id
+        await updateDoc(d.ref, { publicId })
+        // เดิมไม่มี publicId แปลว่าสำเนาเก่า (ถ้ามี) ถูกเก็บไว้ที่ publicRepairs/{repairId}
+        // (doc id เดียวกับ repairs) — ลบทิ้งกันซ้ำซ้อนกับสำเนาใหม่ที่กำลังจะสร้างที่ publicId
+        await deleteDoc(doc(db, PUBLIC_REPAIRS, d.id)).catch(() => {})
+      }
       await setDoc(
-        doc(db, PUBLIC_REPAIRS, d.id),
+        doc(db, PUBLIC_REPAIRS, publicId),
         publicRepairFields({
           item: data.item,
           status: data.status,
@@ -239,7 +276,9 @@ export async function changeRepairStatus(
     changedAt: serverTimestamp(),
   })
 
-  await updateDoc(doc(db, PUBLIC_REPAIRS, repairId), {
+  // fallback ไป repairId เองสำหรับรายการเก่าก่อนมีฟิลด์ publicId (repairId เดิมเป็นสตริง
+  // สุ่มที่ไม่มีเลขบัตรประชาชนปนอยู่ จึงไม่รั่วข้อมูลถ้าใช้แทนกันชั่วคราว)
+  await updateDoc(doc(db, PUBLIC_REPAIRS, current.publicId || repairId), {
     status: newStatus,
     statusLabel: statusLabel(newStatus),
     unrepairable: isUnrepairable,
@@ -289,7 +328,7 @@ export async function deleteRepair(repairId) {
 
   await deleteRepairPhotos(repairId)
   await deleteDoc(ref)
-  await deleteDoc(doc(db, PUBLIC_REPAIRS, repairId))
+  await deleteDoc(doc(db, PUBLIC_REPAIRS, data.publicId || repairId))
 
   await recordDeleteRepair({
     category: data.item?.category,

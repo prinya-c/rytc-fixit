@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import PhotoCaptureInput from '../components/PhotoCaptureInput'
-import { createRepair, newRepairId } from '../lib/repairs'
+import { buildRepairId, createRepair } from '../lib/repairs'
 import { uploadRepairPhoto } from '../lib/storageUpload'
 import {
   ACCESSORY_OPTIONS,
@@ -126,7 +126,7 @@ export default function RepairForm() {
     setError('')
     setSubmitting(true)
     try {
-      const repairId = newRepairId()
+      const repairId = buildRepairId(nationalId.trim())
       const [itemPhoto1Url, itemPhoto2Url, personPhotoUrl] = await Promise.all([
         uploadRepairPhoto(repairId, 'intake/item-1.jpg', itemPhoto1),
         uploadRepairPhoto(repairId, 'intake/item-2.jpg', itemPhoto2),

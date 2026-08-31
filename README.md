@@ -52,10 +52,14 @@ staff/{uid}                          // doc id = Firebase Auth uid, สร้า
   fullName, phone, email: string
   createdAt: timestamp
 
-repairs/{repairId}
+repairs/{repairId}                   // doc id = "{เลขบัตรประชาชนผู้ขอรับบริการ}-dd-mm-yyyy-HH-mm-ss"
+                                      // (เวลาเครื่อง ณ ตอนกดบันทึก) ดู buildRepairId() ใน repairs.js
   requester: { fullName, nationalId, phone,
                houseNo?, moo?, subDistrict?, district?, province? }
   item: { category, vehicleType?, otherDetail?, registrationNo? }
+  publicId: string              // doc id ของสำเนาใน publicRepairs — คนละค่ากับ repairId โดย
+                                 // ตั้งใจ เพื่อไม่ให้เลขบัตรประชาชนรั่วผ่าน document id ของ
+                                 // collection ที่เปิดอ่านสาธารณะ
   intakeCondition: { symptoms[], symptomOtherDetail?, condition[], conditionOtherDetail?,
                       accessories[], accessoryOtherDetail? }
   photosIntake: { itemPhotos: [url, url], personPhoto: url }
@@ -76,7 +80,8 @@ repairs/{repairId}/statusLogs/{logId}   // ประวัติการเป�
   status, statusLabel, note?, reasonNote?, changedByUid, changedByName, changedAt
   // log แรกที่ status อยู่ใน 4/5/6 ใช้เป็น "วันที่เริ่มซ่อม" ในใบรายงานซ่อม (ไม่มีฟิลด์แยก)
 
-publicRepairs/{repairId}             // สำเนาไม่มี PII ของ repairs/{repairId}, อ่านสาธารณะได้
+publicRepairs/{publicId}             // สำเนาไม่มี PII ของ repairs/{repairId} (doc id = publicId
+                                      // ของรายการนั้น ไม่ใช่ repairId), อ่านสาธารณะได้
   category, vehicleType?, status, statusLabel, unrepairable, itemPhoto, createdAt, updatedAt
 
 stats/summary                        // doc เดียว, อ่านได้แบบสาธารณะ (ไม่มีข้อมูลส่วนบุคคล)
