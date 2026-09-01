@@ -74,14 +74,6 @@ export default function RepairDetail() {
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-6 space-y-5">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-xl font-bold text-slate-800">{repair.requester?.fullName}</h1>
-          <p className="text-xs text-slate-400">รหัสรายการ: {repair.id}</p>
-        </div>
-        <StatusBadge status={repair.status} unrepairable={repair.unrepairable} className="text-sm px-3 py-1.5" />
-      </div>
-
       <div className="flex flex-wrap gap-2">
         <Link
           to={`/repairs/${id}/print`}
@@ -128,6 +120,14 @@ export default function RepairDetail() {
         >
           {deleting ? 'กำลังลบ...' : 'ลบรายการ'}
         </button>
+      </div>
+
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h1 className="text-xl font-bold text-slate-800">{repair.requester?.fullName}</h1>
+          <p className="text-xs text-slate-400">รหัสรายการ: {repair.id}</p>
+        </div>
+        <StatusBadge status={repair.status} unrepairable={repair.unrepairable} className="text-sm px-3 py-1.5" />
       </div>
 
       <Section title="ผู้ขอรับบริการ">
