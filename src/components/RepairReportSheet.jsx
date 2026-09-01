@@ -1,4 +1,4 @@
-import { FIXIT_LOGO, RYTC_LOGO } from '../lib/assets'
+import { FIXIT_LOGO } from '../lib/assets'
 import { ITEM_CATEGORIES, OTHER_VALUE, VEHICLE_TYPES } from '../lib/options'
 
 const CENTER_NAME = 'วิทยาลัยเทคนิคระยอง'
@@ -45,11 +45,17 @@ function displayItems(items, otherDetail) {
   return items.map((item) => (item === OTHER_VALUE && otherDetail ? otherDetail : item))
 }
 
-function ListOrDash({ items }) {
-  if (!items || items.length === 0) return <p>-</p>
-  return items.map((item, i) => (
-    <p key={`${item}-${i}`}>
-      {i + 1}. {item}
+/**
+ * แสดงรายการแบบมีเลขข้อ อย่างน้อย MIN_LINES บรรทัดเสมอ (บรรทัดที่เกินข้อมูลจริงเว้นว่างเป็นเส้นประ
+ * ไว้ให้เขียนเพิ่มด้วยมือ) ถ้ามีข้อมูลมากกว่า MIN_LINES ก็แสดงครบทุกข้อ ไม่ตัดทิ้ง
+ */
+const MIN_LINES = 3
+function NumberedLines({ items }) {
+  const list = items ?? []
+  const lineCount = Math.max(list.length, MIN_LINES)
+  return Array.from({ length: lineCount }, (_, i) => (
+    <p key={i}>
+      {i + 1}. {list[i] || '..........................'}
     </p>
   ))
 }
@@ -70,13 +76,10 @@ export default function RepairReportSheet({ repair, logs }) {
 
   return (
     <div className="p-[15mm] text-[13px] leading-snug text-slate-900">
-      <div className="flex items-center justify-between mb-3">
-        <img src={RYTC_LOGO} alt="Rayong Technical College" className="h-10 object-contain" />
-        <div className="text-center">
-          <p className="text-lg font-bold">ใบรับงานซ่อม (Repair Form)</p>
-          <p className="text-sm">ศูนย์ซ่อมสร้างเพื่อชุมชน (Fix it Center)</p>
-        </div>
-        <img src={FIXIT_LOGO} alt="Fix it Center" className="h-16 w-16 object-contain" />
+      <div className="flex flex-col items-center mb-3">
+        <img src={FIXIT_LOGO} alt="Fix it Center" className="w-[1.2in] object-contain" />
+        <p className="text-lg font-bold mt-1">ใบรับงานซ่อม (Repair Form)</p>
+        <p className="text-sm">ศูนย์ซ่อมสร้างเพื่อชุมชน (Fix it Center)</p>
       </div>
 
       <div className="flex justify-between mb-2">
@@ -84,11 +87,20 @@ export default function RepairReportSheet({ repair, logs }) {
         <p>ปีงบประมาณ: {fiscalYear(repair.intake?.registeredAt)}</p>
       </div>
 
-      <div className="grid grid-cols-2 border border-slate-500">
+      <div className="grid grid-cols-2 border border-slate-500 min-h-[40mm]">
         <div className="p-2 border-r border-slate-500">
           วัน/เดือน/ปี: {fmtDate(repair.intake?.registeredAt)} &nbsp; เวลา: {fmtTime(repair.intake?.registeredAt)}
         </div>
-        <div className="p-2">เลขที่: {repair.id}</div>
+        <div className="p-2 flex flex-col items-center">
+          <p className="self-start">เลขที่: {repair.id}</p>
+          {repair.photosIntake?.personPhoto && (
+            <img
+              src={repair.photosIntake.personPhoto}
+              alt="รูปตอนรับลงทะเบียน"
+              className="mt-1 max-h-[32mm] object-contain"
+            />
+          )}
+        </div>
       </div>
 
       <div className="border border-t-0 border-slate-500 p-2 space-y-1">
@@ -111,19 +123,19 @@ export default function RepairReportSheet({ repair, logs }) {
       <div className="grid grid-cols-3 border border-t-0 border-slate-500">
         <div className="p-2 border-r border-slate-500">
           <p className="font-semibold text-center mb-1">อาการเสีย</p>
-          <ListOrDash
+          <NumberedLines
             items={displayItems(repair.intakeCondition?.symptoms, repair.intakeCondition?.symptomOtherDetail)}
           />
         </div>
         <div className="p-2 border-r border-slate-500">
           <p className="font-semibold text-center mb-1">สภาพเครื่องใช้ที่นำมาซ่อม</p>
-          <ListOrDash
+          <NumberedLines
             items={displayItems(repair.intakeCondition?.condition, repair.intakeCondition?.conditionOtherDetail)}
           />
         </div>
         <div className="p-2">
           <p className="font-semibold text-center mb-1">อุปกรณ์ที่ติดมาด้วย</p>
-          <ListOrDash
+          <NumberedLines
             items={displayItems(repair.intakeCondition?.accessories, repair.intakeCondition?.accessoryOtherDetail)}
           />
         </div>
