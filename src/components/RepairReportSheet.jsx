@@ -25,7 +25,7 @@ function itemDescription(item) {
     const v = VEHICLE_TYPES.find((t) => t.value === item.vehicleType)?.label
     return v || 'ยานพาหนะ'
   }
-  if (item.category === 'other') return item.otherDetail || 'อื่นๆ'
+  if (item.itemName) return item.itemName
   return ITEM_CATEGORIES.find((c) => c.value === item.category)?.label || '-'
 }
 

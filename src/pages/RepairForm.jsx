@@ -83,7 +83,7 @@ export default function RepairForm() {
 
   const [category, setCategory] = useState('')
   const [vehicleType, setVehicleType] = useState('')
-  const [otherDetail, setOtherDetail] = useState('')
+  const [itemName, setItemName] = useState('')
   const [brand, setBrand] = useState('')
   const [model, setModel] = useState('')
   const [registrationNo, setRegistrationNo] = useState('')
@@ -111,7 +111,7 @@ export default function RepairForm() {
     if (!phone.trim()) return 'กรุณากรอกหมายเลขโทรศัพท์'
     if (!category) return 'กรุณาเลือกประเภทของสิ่งที่นำมาซ่อม'
     if (category === 'vehicle' && !vehicleType) return 'กรุณาเลือกชนิดยานพาหนะ'
-    if (category === 'other' && !otherDetail.trim()) return 'กรุณาระบุประเภทสิ่งของ'
+    if (category !== 'vehicle' && !itemName.trim()) return 'กรุณาระบุชื่อของสิ่งของ'
     if (category === 'vehicle' && !registrationNo.trim()) return 'กรุณากรอกเลขทะเบียนรถ'
     if (!itemPhoto1 || !itemPhoto2) return 'กรุณาถ่ายรูปเครื่องใช้ที่นำมาซ่อม 2 รูป'
     if (!personPhoto) return 'กรุณาถ่ายรูปคนคู่กับเครื่องใช้ 1 รูป'
@@ -152,7 +152,7 @@ export default function RepairForm() {
         item: {
           category,
           vehicleType: category === 'vehicle' ? vehicleType : null,
-          otherDetail: category === 'other' ? otherDetail.trim() : null,
+          itemName: category !== 'vehicle' ? itemName.trim() : null,
           brand: brand.trim() || null,
           model: model.trim() || null,
           registrationNo: category === 'vehicle' ? registrationNo.trim() : null,
@@ -278,11 +278,11 @@ export default function RepairForm() {
               ))}
             </div>
           )}
-          {category === 'other' && (
+          {category && category !== 'vehicle' && (
             <input
-              placeholder="โปรดระบุประเภทสิ่งของ"
-              value={otherDetail}
-              onChange={(e) => setOtherDetail(e.target.value)}
+              placeholder="โปรดระบุชื่อของสิ่งของ"
+              value={itemName}
+              onChange={(e) => setItemName(e.target.value)}
               className={inputClass}
             />
           )}

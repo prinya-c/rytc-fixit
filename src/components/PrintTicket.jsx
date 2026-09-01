@@ -7,9 +7,7 @@ function categoryLabel(item) {
     const v = VEHICLE_TYPES.find((t) => t.value === item.vehicleType)?.label
     return v ? `${cat} (${v})` : cat
   }
-  if (item.category === 'other') {
-    return item.otherDetail ? `${cat}: ${item.otherDetail}` : cat
-  }
+  if (item.itemName) return `${cat}: ${item.itemName}`
   return cat
 }
 
