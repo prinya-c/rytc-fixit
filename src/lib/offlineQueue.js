@@ -81,6 +81,16 @@ async function resolveOne(record) {
   }
 }
 
+/**
+ * หารูปที่ค้างคิวของช่องนี้ — ใช้แสดง preview จากไฟล์ที่มีอยู่ในเครื่องแล้ว (ยังไม่ได้อัปโหลด)
+ * แทนที่จะรอซิงก์เสร็จก่อนถึงจะเห็นรูป
+ */
+export async function getPendingPhoto(repairId, kind, slot) {
+  const db = await dbPromise()
+  const all = await db.getAll(STORE)
+  return all.find((r) => r.repairId === repairId && r.kind === kind && r.slot === slot)
+}
+
 /** ล้างรูปที่ค้างคิวของรายการซ่อมที่ถูกลบไปแล้ว กันไม่ให้คิวพยายามอัปโหลดรูปของรายการที่ไม่มีแล้ว */
 export async function clearPendingForRepair(repairId) {
   const db = await dbPromise()

@@ -15,6 +15,8 @@ import {
 const inputClass =
   'w-full rounded-md border border-slate-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary'
 
+const INTAKE_SLOTS = ['item1', 'item2', 'person']
+
 function categoryLabel(item) {
   if (!item) return ''
   const cat = ITEM_CATEGORIES.find((c) => c.value === item.category)?.label ?? item.category
@@ -142,6 +144,9 @@ export default function RepairStatus() {
               key={i}
               src={url}
               alt=""
+              repairId={id}
+              kind="intake"
+              slot={INTAKE_SLOTS[i]}
               onClick={url ? () => setLightboxUrl(url) : undefined}
               className="h-28 w-full rounded-md overflow-hidden cursor-zoom-in bg-orange-50"
             />

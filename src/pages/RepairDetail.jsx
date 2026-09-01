@@ -7,6 +7,9 @@ import { clearPendingForRepair } from '../lib/offlineQueue'
 import { deleteRepair, subscribeRepair, subscribeStatusLogs } from '../lib/repairs'
 import { ITEM_CATEGORIES, VEHICLE_TYPES } from '../lib/options'
 
+const INTAKE_SLOTS = ['item1', 'item2', 'person']
+const CLOSURE_SLOTS = ['item', 'person']
+
 function categoryLabel(item) {
   if (!item) return ''
   const cat = ITEM_CATEGORIES.find((c) => c.value === item.category)?.label ?? item.category
@@ -154,6 +157,9 @@ export default function RepairDetail() {
               key={i}
               src={url}
               alt=""
+              repairId={id}
+              kind="intake"
+              slot={INTAKE_SLOTS[i]}
               onClick={url ? () => setLightboxUrl(url) : undefined}
               className="h-28 w-full rounded-md overflow-hidden cursor-zoom-in bg-orange-50"
             />
@@ -196,6 +202,9 @@ export default function RepairDetail() {
                 key={i}
                 src={url}
                 alt=""
+                repairId={id}
+                kind="closure"
+                slot={CLOSURE_SLOTS[i]}
                 onClick={url ? () => setLightboxUrl(url) : undefined}
                 className="h-28 w-full rounded-md overflow-hidden cursor-zoom-in bg-orange-50"
               />
