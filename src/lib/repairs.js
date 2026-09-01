@@ -31,13 +31,14 @@ const PUBLIC_REPAIRS = 'publicRepairs'
 
 /**
  * publicRepairs/{repairId} คือสำเนาแบบ "ปลอดข้อมูลส่วนบุคคล" ของ repairs/{repairId}
- * เก็บเฉพาะ category, vehicleType, status, unrepairable, รูปสิ่งของ 1 รูป, วันที่ —
- * ไม่มีชื่อ/เบอร์โทร/เลขบัตรประชาชน/รูปคน เพื่อให้ Dashboard สาธารณะ query แสดงรายการจริง
- * (ไม่ใช่แค่ตัวเลขสรุป) ได้โดยไม่ต้องล็อกอิน — ดู firestore.rules ที่เปิด read สาธารณะไว้เฉพาะ
- * collection นี้ (นอกเหนือจาก stats/summary)
+ * เก็บเฉพาะ category, vehicleType, status, unrepairable, รูปสิ่งของ 1 รูป, วันที่, และ hash
+ * ของ repairId (ดู repairIdHash ด้านล่าง) — ไม่มีชื่อ/เบอร์โทร/เลขบัตรประชาชน/รูปคน เพื่อให้
+ * Dashboard สาธารณะ query แสดงรายการจริง (ไม่ใช่แค่ตัวเลขสรุป) ได้โดยไม่ต้องล็อกอิน — ดู
+ * firestore.rules ที่เปิด read สาธารณะไว้เฉพาะ collection นี้ (นอกเหนือจาก stats/summary)
  */
-function publicRepairFields({ item, status, unrepairable, itemPhoto, createdAt, updatedAt }) {
+function publicRepairFields({ repairIdHash, item, status, unrepairable, itemPhoto, createdAt, updatedAt }) {
   return {
+    repairIdHash,
     category: item.category,
     vehicleType: item.vehicleType ?? null,
     status,
@@ -47,6 +48,21 @@ function publicRepairFields({ item, status, unrepairable, itemPhoto, createdAt, 
     createdAt,
     updatedAt,
   }
+}
+
+/**
+ * แฮชทางเดียวของ repairId — repairId ขึ้นต้นด้วยเลขบัตรประชาชนของผู้ขอรับบริการ (ดู
+ * buildRepairId) จึงห้ามเก็บค่าดิบไว้ใน publicRepairs ที่เปิดอ่านสาธารณะโดยตรง แต่ยังต้องมีทาง
+ * ให้หน้า /repairs/:id (ที่คนไม่ได้ล็อกอินก็เข้าได้จาก QR ใบเดียวกับที่เจ้าหน้าที่ใช้) ค้นหา
+ * เอกสารสาธารณะของรายการนั้นจาก repairId ใน URL ได้ — ใช้ SHA-256 ผ่าน Web Crypto (มีในทุก
+ * เบราว์เซอร์สมัยใหม่บน HTTPS/localhost) แล้ว query ด้วยค่า hash แทนค่าดิบ
+ */
+async function sha256Hex(text) {
+  const data = new TextEncoder().encode(text)
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data)
+  return Array.from(new Uint8Array(hashBuffer))
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('')
 }
 
 function pad2(n) {
@@ -86,6 +102,7 @@ export async function createRepair(
   // ผู้ขอรับบริการ ถ้าใช้ค่าเดียวกันเป็น doc id ของ publicRepairs (ซึ่งเปิดอ่านสาธารณะ) เลขบัตร
   // ประชาชนจะรั่วออกไปทาง document id แม้ในตัวฟิลด์จะไม่มีข้อมูลนี้อยู่ก็ตาม
   const publicId = doc(collection(db, PUBLIC_REPAIRS)).id
+  const repairIdHash = await sha256Hex(repairId)
 
   // ช่องรูปที่เป็น null คือยังอัปโหลดไม่สำเร็จ (คิวไว้ในเครื่องตอนออฟไลน์ — ดู offlineQueue.js)
   // pendingPhotos เก็บ slot ที่ยังรอไว้ ให้ resolvePendingIntakePhoto() รู้ว่าต้องแก้ฟิลด์ไหน
@@ -125,6 +142,7 @@ export async function createRepair(
   await setDoc(
     doc(db, PUBLIC_REPAIRS, publicId),
     publicRepairFields({
+      repairIdHash,
       item,
       status: 1,
       unrepairable: false,
@@ -142,6 +160,27 @@ export function subscribeRepair(repairId, callback) {
   return onSnapshot(doc(db, REPAIRS, repairId), (snap) => {
     callback(snap.exists() ? { id: snap.id, ...snap.data() } : null)
   })
+}
+
+/**
+ * ใช้โดยหน้า /repairs/:id ตอนที่คนดูยังไม่ได้ล็อกอิน (สแกน QR เดียวกับที่เจ้าหน้าที่ใช้) —
+ * หา publicRepairs ที่ตรงกับ repairId นี้ผ่าน hash (ดู sha256Hex) แทนการอ่าน repairs/{repairId}
+ * ตรงๆ ซึ่งกฎความปลอดภัยเปิดให้เฉพาะเจ้าหน้าที่ที่ล็อกอินแล้วเท่านั้น
+ */
+export function subscribePublicRepairByRepairId(repairId, callback) {
+  let unsub = null
+  let cancelled = false
+  sha256Hex(repairId).then((repairIdHash) => {
+    if (cancelled) return
+    const q = query(collection(db, PUBLIC_REPAIRS), where('repairIdHash', '==', repairIdHash))
+    unsub = onSnapshot(q, (snap) => {
+      callback(snap.empty ? null : { id: snap.docs[0].id, ...snap.docs[0].data() })
+    })
+  })
+  return () => {
+    cancelled = true
+    if (unsub) unsub()
+  }
 }
 
 export async function getRepair(repairId) {
@@ -206,9 +245,11 @@ export async function backfillPublicRepairs() {
         // (doc id เดียวกับ repairs) — ลบทิ้งกันซ้ำซ้อนกับสำเนาใหม่ที่กำลังจะสร้างที่ publicId
         await deleteDoc(doc(db, PUBLIC_REPAIRS, d.id)).catch(() => {})
       }
+      const repairIdHash = await sha256Hex(d.id)
       await setDoc(
         doc(db, PUBLIC_REPAIRS, publicId),
         publicRepairFields({
+          repairIdHash,
           item: data.item,
           status: data.status,
           unrepairable: data.unrepairable,
