@@ -5,7 +5,7 @@ import PrintTicket from '../components/PrintTicket'
 import { getRepair } from '../lib/repairs'
 
 // ลิงก์ติดตามสถานะสาธารณะ (Dashboard) — เหมือนกันทุกใบ ไม่ขึ้นกับรายการซ่อม
-const CONTACT_URL = 'https://fixit-app.ryct.ac.th'
+const CONTACT_URL = 'https://fixit-app.rytc.ac.th'
 
 export default function RepairPrint() {
   const { id } = useParams()
