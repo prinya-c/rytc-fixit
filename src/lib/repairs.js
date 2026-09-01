@@ -122,7 +122,8 @@ export async function createRepair(
       item,
       status: 1,
       unrepairable: false,
-      itemPhoto: photosIntake?.itemPhotos?.[0],
+      // ใช้รูปเครื่องใช้ (index 1) เป็นรูปแทนสาธารณะ ไม่ใช่รูปบัตรประชาชน (index 0)
+      itemPhoto: photosIntake?.itemPhotos?.[1],
       createdAt: now,
       updatedAt: now,
     }),
@@ -205,7 +206,7 @@ export async function backfillPublicRepairs() {
           item: data.item,
           status: data.status,
           unrepairable: data.unrepairable,
-          itemPhoto: data.photosIntake?.itemPhotos?.[0],
+          itemPhoto: data.photosIntake?.itemPhotos?.[1],
           createdAt: data.createdAt,
           updatedAt: data.updatedAt,
         }),
@@ -257,8 +258,8 @@ export async function saveQualityCheck(
 
 /**
  * แก้ URL รูปที่ค้างอัปโหลดตอนออฟไลน์กลับเข้าไปในเอกสาร เรียกจาก offlineQueue.js เมื่ออัปโหลด
- * รูปสำเร็จภายหลัง (slot: 'item1' | 'item2' | 'person') — ถ้าเป็นรูปเครื่องใช้รูปแรก จะอัปเดต
- * publicRepairs ให้ Dashboard สาธารณะเห็นรูปด้วย
+ * รูปสำเร็จภายหลัง (slot: 'item1' | 'item2' | 'person') — ถ้าเป็นรูปเครื่องใช้ (item2) จะอัปเดต
+ * publicRepairs ให้ Dashboard สาธารณะเห็นรูปด้วย (item1 คือรูปบัตรประชาชน ห้ามขึ้นสาธารณะ)
  */
 export async function resolvePendingIntakePhoto(repairId, slot, url) {
   const ref = doc(db, REPAIRS, repairId)
@@ -277,7 +278,7 @@ export async function resolvePendingIntakePhoto(repairId, slot, url) {
     updatedAt: serverTimestamp(),
   })
 
-  if (slot === 'item1' && data.publicId) {
+  if (slot === 'item2' && data.publicId) {
     await updateDoc(doc(db, PUBLIC_REPAIRS, data.publicId), { itemPhoto: url })
   }
 }

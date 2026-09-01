@@ -114,7 +114,7 @@ export default function RepairList() {
               <p className="text-xs text-slate-400">โทร {r.requester?.phone}</p>
             </div>
             <PhotoOrPending
-              src={r.photosIntake?.itemPhotos?.[0]}
+              src={r.photosIntake?.itemPhotos?.[1]}
               alt={r.requester?.fullName}
               className="h-36 w-full object-contain bg-orange-50"
             />
