@@ -93,10 +93,10 @@ export async function createRepair(
   { requester, item, intakeCondition, photosIntake, staffUid, staffName, staffPhone },
 ) {
   const ref = doc(db, REPAIRS, repairId)
-  const existing = await getDoc(ref)
-  if (existing.exists()) {
-    throw new Error('รหัสรายการนี้ถูกใช้ไปแล้ว (อาจกดบันทึกซ้ำในวินาทีเดียวกัน) กรุณาลองใหม่อีกครั้ง')
-  }
+  // เดิมเช็คก่อนว่า repairId ซ้ำหรือไม่ด้วย getDoc() — แต่ getDoc() อ่านเอกสารที่ไม่เคยแคชไว้
+  // (repairId สร้างใหม่ทุกครั้ง) จะ throw ทันทีตอนออฟไลน์แทนที่จะรอคิวเหมือนคำสั่งเขียน ทำให้
+  // ลงทะเบียนใหม่ใช้งานออฟไลน์ไม่ได้เลย จึงตัดออก — repairId มาจากเลขบัตรประชาชน+วันเวลาละเอียด
+  // ถึงวินาที (buildRepairId) ซ้ำกันได้ยากมากอยู่แล้วโดยธรรมชาติ
   const now = serverTimestamp()
   // publicId เป็นคนละค่ากับ repairId โดยตั้งใจ — repairId ตอนนี้ขึ้นต้นด้วยเลขบัตรประชาชน
   // ผู้ขอรับบริการ ถ้าใช้ค่าเดียวกันเป็น doc id ของ publicRepairs (ซึ่งเปิดอ่านสาธารณะ) เลขบัตร
