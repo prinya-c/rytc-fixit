@@ -3,8 +3,9 @@ import { subscribePendingCount } from '../lib/offlineQueue'
 
 /**
  * แถบแจ้งเตือนสถานะออฟไลน์/ซิงก์รูปภาพ:
- * - ขาดสัญญาณ: ข้อมูลฟอร์มยังบันทึกได้ปกติ (Firestore offline cache) แต่รูปภาพต้องรอคิว
- * - กลับมาออนไลน์แล้วแต่ยังมีรูปค้างคิวอยู่ (offlineQueue.js): แจ้งว่ากำลังซิงก์ให้อัตโนมัติ
+ * - ขาดสัญญาณ: ข้อมูลฟอร์ม (Firestore offline cache) และรูปภาพ (offlineQueue.js) ยังบันทึกได้
+ *   ปกติทั้งคู่ แค่รอซิงก์ขึ้นคลาวด์ตอนกลับมาออนไลน์
+ * - กลับมาออนไลน์แล้วแต่ยังมีรูปค้างคิวอยู่: แจ้งว่ากำลังซิงก์ให้อัตโนมัติ
  */
 export default function OnlineStatusBanner() {
   const [online, setOnline] = useState(navigator.onLine)
@@ -30,8 +31,7 @@ export default function OnlineStatusBanner() {
   if (!online) {
     return (
       <div className="bg-amber-500 text-white text-sm text-center py-2 px-4">
-        📴 ขณะนี้ไม่มีสัญญาณอินเทอร์เน็ต — ข้อมูลจะถูกบันทึกไว้ในเครื่องและซิงก์อัตโนมัติเมื่อกลับมาออนไลน์
-        (ยกเว้นรูปภาพที่ยังอัปโหลดไม่สำเร็จ)
+        📴 ขณะนี้ไม่มีสัญญาณอินเทอร์เน็ต — ข้อมูลและรูปภาพจะซิงก์ขึ้นคลาวด์ให้อัตโนมัติเมื่อกลับมาออนไลน์
       </div>
     )
   }
