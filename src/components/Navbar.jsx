@@ -16,7 +16,7 @@ export default function Navbar() {
         <Link to="/" className="flex items-center gap-2 font-semibold text-white">
           <img src={FIXIT_LOGO} alt="Fix it Center" className="h-9 w-9 object-contain" />
           <span className="leading-tight">
-            RYTC-Fix
+            RYTC-FixIT
             <span className="block text-xs font-normal text-white/80">
               ศูนย์ซ่อมสร้างเพื่อชุมชน
             </span>

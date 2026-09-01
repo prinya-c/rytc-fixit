@@ -17,18 +17,13 @@ export default function PrintTicket({ repair, qrDataUrl, contactQrDataUrl }) {
   return (
     <div className="border border-dashed border-slate-400 p-4 flex flex-col gap-3 text-sm leading-snug text-slate-800 overflow-hidden">
       <div className="flex items-start justify-between gap-3 border-b-2 border-slate-300 pb-2">
-        <div className="flex items-start gap-2">
-          <img src={FIXIT_LOGO} alt="Fix it Center" className="h-10 w-10 object-contain shrink-0" />
-          <div>
-            <p className="font-bold text-lg leading-tight">ใบลงทะเบียนรับซ่อม</p>
-            <p className="font-bold text-base text-primary leading-tight">RYTC-Fix</p>
-            <p className="text-xs text-slate-500 mt-1">ศูนย์ซ่อมสร้างเพื่อชุมชน วิทยาลัยเทคนิคระยอง</p>
-          </div>
+        <div>
+          <img src={FIXIT_LOGO} alt="Fix it Center" className="h-10 w-10 object-contain" />
+          <p className="font-bold text-lg leading-tight mt-1">ใบลงทะเบียนรับซ่อม</p>
+          <p className="font-bold text-base text-primary leading-tight">RYTC-FixIT</p>
+          <p className="text-xs text-slate-500 mt-1">ศูนย์ซ่อมสร้างเพื่อชุมชน วิทยาลัยเทคนิคระยอง</p>
         </div>
-        <div className="flex flex-col items-end gap-1 shrink-0">
-          <img src={RYTC_LOGO} alt="Rayong Technical College" className="h-5 object-contain" />
-          <img src={qrDataUrl} alt="QR" className="h-32 w-32" />
-        </div>
+        <img src={qrDataUrl} alt="QR" className="h-32 w-32 shrink-0" />
       </div>
 
       <div>
@@ -58,7 +53,10 @@ export default function PrintTicket({ repair, qrDataUrl, contactQrDataUrl }) {
           หรือโทรสอบถามได้ที่เจ้าหน้าที่รับลงทะเบียน
         </p>
       </div>
-      <p className="text-[10px] text-slate-400">รหัสรายการ: {repair.id}</p>
+      <div className="flex items-end justify-between">
+        <p className="text-[10px] text-slate-400">รหัสรายการ: {repair.id}</p>
+        <img src={RYTC_LOGO} alt="Rayong Technical College" className="h-5 object-contain" />
+      </div>
     </div>
   )
 }

@@ -14,8 +14,8 @@ export default defineConfig({
       registerType: 'prompt',
       includeAssets: ['favicon.svg', 'fixit-logo.png', 'rytc-logo01.png'],
       manifest: {
-        name: 'RYTC-Fix | ศูนย์ซ่อมสร้างเพื่อชุมชน',
-        short_name: 'RYTC-Fix',
+        name: 'RYTC-FixIT | ศูนย์ซ่อมสร้างเพื่อชุมชน',
+        short_name: 'RYTC-FixIT',
         description:
           'ระบบติดตามงานซ่อม โครงการอาชีวะอาสา! ศูนย์ซ่อมสร้างเพื่อชุมชน วิทยาลัยเทคนิคระยอง',
         lang: 'th',

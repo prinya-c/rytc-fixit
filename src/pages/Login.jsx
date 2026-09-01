@@ -34,7 +34,7 @@ export default function Login() {
         <img src={FIXIT_LOGO} alt="Fix it Center" className="h-16 w-16 object-contain mx-auto" />
         <div>
           <h1 className="text-lg font-semibold text-slate-800">เข้าสู่ระบบเจ้าหน้าที่</h1>
-          <p className="text-sm text-slate-500">RYTC-Fix ศูนย์ซ่อมสร้างเพื่อชุมชน</p>
+          <p className="text-sm text-slate-500">RYTC-FixIT ศูนย์ซ่อมสร้างเพื่อชุมชน</p>
           <img src={RYTC_LOGO} alt="Rayong Technical College" className="h-6 object-contain mx-auto mt-2" />
         </div>
         {error && (

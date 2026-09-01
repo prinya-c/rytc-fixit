@@ -146,7 +146,7 @@ export default function Dashboard() {
       <section className="bg-white rounded-2xl shadow-sm border border-orange-100 p-6 flex items-start gap-4">
         <img src={FIXIT_LOGO} alt="Fix it Center" className="h-16 w-16 object-contain shrink-0" />
         <div>
-          <h1 className="text-2xl font-bold text-primary">RYTC-Fix</h1>
+          <h1 className="text-2xl font-bold text-primary">RYTC-FixIT</h1>
           <p className="text-slate-600 mt-1">
             ระบบติดตามงานซ่อม โครงการ <strong>อาชีวะอาสา! ศูนย์ซ่อมสร้างเพื่อชุมชน (Fix it Center)</strong>{' '}
             วิทยาลัยเทคนิคระยอง — ให้บริการซ่อมเครื่องมือ เครื่องใช้ไฟฟ้า เครื่องจักรกลการเกษตร

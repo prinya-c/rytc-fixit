@@ -33,7 +33,7 @@ export default function Scan() {
       if (handledRef.current) return
       const repairId = extractRepairId(decodedText)
       if (!repairId) {
-        setError('QR นี้ไม่ใช่ QR ของ RYTC-Fix')
+        setError('QR นี้ไม่ใช่ QR ของ RYTC-FixIT')
         return
       }
       handledRef.current = true
