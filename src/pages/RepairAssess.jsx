@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
+import PhotoLightbox from '../components/PhotoLightbox'
+import PhotoOrPending from '../components/PhotoOrPending'
 import { useAuth } from '../context/AuthContext'
 import { changeRepairStatus, saveAssessment, subscribeRepair } from '../lib/repairs'
 import { DAMAGE_LEVELS, ITEM_CATEGORIES, STATUSES, UNREPAIRABLE_REASONS, VEHICLE_TYPES } from '../lib/options'
@@ -33,6 +35,7 @@ export default function RepairAssess() {
   const [reasonNote, setReasonNote] = useState('')
   const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
+  const [lightboxUrl, setLightboxUrl] = useState(null)
 
   useEffect(() => {
     const unsub = subscribeRepair(id, (data) => {
@@ -44,6 +47,13 @@ export default function RepairAssess() {
 
   if (repair === undefined) return <p className="text-center text-slate-400 py-10">กำลังโหลด...</p>
   if (repair === null) return <p className="text-center text-danger py-10">ไม่พบรายการนี้</p>
+
+  // แสดงครบ 3 ช่องเสมอ (ไม่กรอง null ทิ้ง) เพื่อให้เห็นว่ารูปไหนยังรอซิงก์จากคิวออฟไลน์อยู่
+  const intakePhotos = [
+    repair.photosIntake?.itemPhotos?.[0] ?? null,
+    repair.photosIntake?.itemPhotos?.[1] ?? null,
+    repair.photosIntake?.personPhoto ?? null,
+  ]
 
   async function handleSubmit(e) {
     e.preventDefault()
@@ -91,6 +101,17 @@ export default function RepairAssess() {
         {repair.intakeCondition?.accessories?.length > 0 && (
           <p>อุปกรณ์ที่ติดมาด้วย: {repair.intakeCondition.accessories.join(', ')}</p>
         )}
+        <div className="grid grid-cols-3 gap-2 pt-2">
+          {intakePhotos.map((url, i) => (
+            <PhotoOrPending
+              key={i}
+              src={url}
+              alt=""
+              onClick={url ? () => setLightboxUrl(url) : undefined}
+              className="h-28 w-full rounded-md overflow-hidden cursor-zoom-in bg-orange-50"
+            />
+          ))}
+        </div>
       </div>
 
       <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow-sm border border-orange-100 p-5 space-y-4">
@@ -191,6 +212,8 @@ export default function RepairAssess() {
           </button>
         </div>
       </form>
+
+      <PhotoLightbox src={lightboxUrl} onClose={() => setLightboxUrl(null)} />
     </div>
   )
 }
