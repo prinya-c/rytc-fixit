@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { HashRouter, Navigate, Route, Routes } from 'react-router-dom'
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { AuthProvider } from './context/AuthContext'
 import PrivateRoute from './components/PrivateRoute'
 import Navbar from './components/Navbar'
@@ -30,7 +30,7 @@ export default function App() {
 
   return (
     <AuthProvider>
-      <HashRouter>
+      <BrowserRouter>
         <div className="min-h-screen bg-[#fffaf5] flex flex-col">
           <PwaUpdatePrompt />
           <OnlineStatusBanner />
@@ -53,7 +53,7 @@ export default function App() {
           </div>
           <Footer />
         </div>
-      </HashRouter>
+      </BrowserRouter>
     </AuthProvider>
   )
 }

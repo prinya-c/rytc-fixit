@@ -6,7 +6,9 @@ import { getRepair } from '../lib/repairs'
 const READER_ID = 'qr-reader'
 
 function extractRepairId(text) {
-  const match = text.match(/#\/repairs\/([^/?#]+)/)
+  // ไม่ผูกกับ "#/repairs/" ตรงๆ เพราะใบเก่าที่เคยพิมพ์ไว้ตอนแอปยังใช้ HashRouter จะมี # นำหน้า
+  // ส่วนใบใหม่ (BrowserRouter) จะไม่มี # เลย — จับแค่ "/repairs/{id}" เฉยๆ ก็ครอบคลุมทั้งสองแบบ
+  const match = text.match(/\/repairs\/([^/?#]+)/)
   if (match) return match[1]
   if (/^[A-Za-z0-9_-]+$/.test(text.trim())) return text.trim()
   return null
