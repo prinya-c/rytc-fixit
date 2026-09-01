@@ -2,10 +2,21 @@ import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { changeRepairStatus, saveAssessment, subscribeRepair } from '../lib/repairs'
-import { DAMAGE_LEVELS, STATUSES, UNREPAIRABLE_REASONS } from '../lib/options'
+import { DAMAGE_LEVELS, ITEM_CATEGORIES, STATUSES, UNREPAIRABLE_REASONS, VEHICLE_TYPES } from '../lib/options'
 
 const inputClass =
   'w-full rounded-md border border-slate-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary'
+
+function categoryLabel(item) {
+  if (!item) return ''
+  const cat = ITEM_CATEGORIES.find((c) => c.value === item.category)?.label ?? item.category
+  if (item.category === 'vehicle') {
+    const v = VEHICLE_TYPES.find((t) => t.value === item.vehicleType)?.label
+    return v ? `${cat} (${v})` : cat
+  }
+  if (item.itemName) return `${cat}: ${item.itemName}`
+  return cat
+}
 
 export default function RepairAssess() {
   const { id } = useParams()
@@ -67,6 +78,20 @@ export default function RepairAssess() {
     <div className="max-w-2xl mx-auto px-4 py-6 space-y-5">
       <h1 className="text-xl font-bold text-slate-800">คัดแยก/ประเมินความเสียหาย</h1>
       <p className="text-sm text-slate-500">{repair.requester?.fullName} · รหัสรายการ {repair.id}</p>
+
+      <div className="bg-white rounded-xl shadow-sm border border-orange-100 p-5 space-y-1 text-sm text-slate-600">
+        <p className="text-slate-800 font-medium">{categoryLabel(repair.item)}</p>
+        {repair.item?.brand && <p>ยี่ห้อ: {repair.item.brand}</p>}
+        {repair.intakeCondition?.symptoms?.length > 0 && (
+          <p>อาการที่เสีย: {repair.intakeCondition.symptoms.join(', ')}</p>
+        )}
+        {repair.intakeCondition?.condition?.length > 0 && (
+          <p>สภาพ: {repair.intakeCondition.condition.join(', ')}</p>
+        )}
+        {repair.intakeCondition?.accessories?.length > 0 && (
+          <p>อุปกรณ์ที่ติดมาด้วย: {repair.intakeCondition.accessories.join(', ')}</p>
+        )}
+      </div>
 
       <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow-sm border border-orange-100 p-5 space-y-4">
         {error && (
