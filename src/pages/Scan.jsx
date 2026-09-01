@@ -26,10 +26,29 @@ export default function Scan() {
   const [busy, setBusy] = useState(false)
   const scannerRef = useRef(null)
   const handledRef = useRef(false)
+  const stoppedRef = useRef(false)
 
   useEffect(() => {
     const scanner = new Html5Qrcode(READER_ID)
     scannerRef.current = scanner
+
+    // ต้องเรียกแค่ครั้งเดียว ไม่ว่าจะมาจากตอนสแกนเจอ QR (handleDecoded) หรือตอนออกจากหน้านี้
+    // (cleanup) — เรียก stop() ซ้ำสองรอบทำให้กล้อง/DOM ของ html5-qrcode เคลียร์ไม่หมด
+    // เหลือ video/overlay ค้างทับหน้าถัดไปที่ navigate ไป (ต้องรีเฟรชถึงจะหายและเห็นข้อมูลจริง)
+    async function stopAndClear() {
+      if (stoppedRef.current) return
+      stoppedRef.current = true
+      try {
+        await scanner.stop()
+      } catch {
+        // ignore
+      }
+      try {
+        scanner.clear()
+      } catch {
+        // ignore
+      }
+    }
 
     async function handleDecoded(decodedText) {
       if (handledRef.current) return
@@ -40,11 +59,7 @@ export default function Scan() {
       }
       handledRef.current = true
       setBusy(true)
-      try {
-        await scanner.stop()
-      } catch {
-        // ignore
-      }
+      await stopAndClear()
       const repair = await getRepair(repairId)
       if (!repair) {
         setError('ไม่พบรายการนี้ในระบบ')
@@ -60,7 +75,7 @@ export default function Scan() {
       .catch((err) => setError(`ไม่สามารถเปิดกล้องได้: ${err}`))
 
     return () => {
-      scanner.stop().catch(() => {})
+      stopAndClear()
     }
   }, [navigate])
 

@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { AuthProvider } from './context/AuthContext'
+import ErrorBoundary from './components/ErrorBoundary'
 import PrivateRoute from './components/PrivateRoute'
 import Navbar from './components/Navbar'
 import Footer from './components/Footer'
@@ -37,21 +38,23 @@ export default function App() {
           <OnlineStatusBanner />
           <Navbar />
           <div className="flex-1">
-            <Routes>
-              <Route path="/" element={<Dashboard />} />
-              <Route path="/staff/login" element={<Login />} />
-              <Route path="/repairs" element={withPrivate(<RepairList />)} />
-              <Route path="/repairs/new" element={withPrivate(<RepairForm />)} />
-              <Route path="/repairs/:id" element={withPrivate(<RepairDetail />)} />
-              <Route path="/repairs/:id/edit" element={withPrivate(<RepairEdit />)} />
-              <Route path="/repairs/:id/print" element={withPrivate(<RepairPrint />)} />
-              <Route path="/repairs/:id/report" element={withPrivate(<RepairReport />)} />
-              <Route path="/repairs/:id/assess" element={withPrivate(<RepairAssess />)} />
-              <Route path="/repairs/:id/status" element={withPrivate(<RepairStatus />)} />
-              <Route path="/repairs/:id/close" element={withPrivate(<RepairClose />)} />
-              <Route path="/scan" element={withPrivate(<Scan />)} />
-              <Route path="*" element={<Navigate to="/" replace />} />
-            </Routes>
+            <ErrorBoundary>
+              <Routes>
+                <Route path="/" element={<Dashboard />} />
+                <Route path="/staff/login" element={<Login />} />
+                <Route path="/repairs" element={withPrivate(<RepairList />)} />
+                <Route path="/repairs/new" element={withPrivate(<RepairForm />)} />
+                <Route path="/repairs/:id" element={withPrivate(<RepairDetail />)} />
+                <Route path="/repairs/:id/edit" element={withPrivate(<RepairEdit />)} />
+                <Route path="/repairs/:id/print" element={withPrivate(<RepairPrint />)} />
+                <Route path="/repairs/:id/report" element={withPrivate(<RepairReport />)} />
+                <Route path="/repairs/:id/assess" element={withPrivate(<RepairAssess />)} />
+                <Route path="/repairs/:id/status" element={withPrivate(<RepairStatus />)} />
+                <Route path="/repairs/:id/close" element={withPrivate(<RepairClose />)} />
+                <Route path="/scan" element={withPrivate(<Scan />)} />
+                <Route path="*" element={<Navigate to="/" replace />} />
+              </Routes>
+            </ErrorBoundary>
           </div>
           <Footer />
         </div>
