@@ -38,7 +38,7 @@ export default function RepairPublicStatus() {
           </p>
         )}
         {repair.requesterName && <p className="text-sm text-slate-600">เจ้าของ: {repair.requesterName}</p>}
-        <StatusBadge status={repair.status} unrepairable={repair.unrepairable} />
+        <StatusBadge status={repair.status} unrepairable={repair.unrepairable} showLabel />
         <PhotoOrPending
           src={repair.itemPhoto}
           alt=""
