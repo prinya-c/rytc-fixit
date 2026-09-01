@@ -2,11 +2,25 @@ import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import PhotoCaptureInput from '../components/PhotoCaptureInput'
+import PhotoLightbox from '../components/PhotoLightbox'
+import PhotoOrPending from '../components/PhotoOrPending'
 import { closeRepair, subscribeRepair } from '../lib/repairs'
 import { uploadOrQueuePhoto } from '../lib/offlineQueue'
+import { ITEM_CATEGORIES, VEHICLE_TYPES } from '../lib/options'
 
 const inputClass =
   'w-full rounded-md border border-slate-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary'
+
+function categoryLabel(item) {
+  if (!item) return ''
+  const cat = ITEM_CATEGORIES.find((c) => c.value === item.category)?.label ?? item.category
+  if (item.category === 'vehicle') {
+    const v = VEHICLE_TYPES.find((t) => t.value === item.vehicleType)?.label
+    return v ? `${cat} (${v})` : cat
+  }
+  if (item.itemName) return `${cat}: ${item.itemName}`
+  return cat
+}
 
 export default function RepairClose() {
   const { id } = useParams()
@@ -20,6 +34,7 @@ export default function RepairClose() {
   const [receiverRelation, setReceiverRelation] = useState('')
   const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
+  const [lightboxUrl, setLightboxUrl] = useState(null)
 
   useEffect(() => {
     const unsub = subscribeRepair(id, (data) => {
@@ -31,6 +46,13 @@ export default function RepairClose() {
 
   if (repair === undefined) return <p className="text-center text-slate-400 py-10">กำลังโหลด...</p>
   if (repair === null) return <p className="text-center text-danger py-10">ไม่พบรายการนี้</p>
+
+  // แสดงครบ 3 ช่องเสมอ (ไม่กรอง null ทิ้ง) เพื่อให้เห็นว่ารูปไหนยังรอซิงก์จากคิวออฟไลน์อยู่
+  const intakePhotos = [
+    repair.photosIntake?.itemPhotos?.[0] ?? null,
+    repair.photosIntake?.itemPhotos?.[1] ?? null,
+    repair.photosIntake?.personPhoto ?? null,
+  ]
 
   async function handleSubmit(e) {
     e.preventDefault()
@@ -69,6 +91,31 @@ export default function RepairClose() {
     <div className="max-w-2xl mx-auto px-4 py-6 space-y-5">
       <h1 className="text-xl font-bold text-slate-800">ปิดงาน / ส่งมอบคืน</h1>
       <p className="text-sm text-slate-500">{repair.requester?.fullName} · รหัสรายการ {repair.id}</p>
+
+      <div className="bg-white rounded-xl shadow-sm border border-orange-100 p-5 space-y-1 text-sm text-slate-600">
+        <p className="text-slate-800 font-medium">{categoryLabel(repair.item)}</p>
+        {repair.item?.brand && <p>ยี่ห้อ: {repair.item.brand}</p>}
+        {repair.intakeCondition?.symptoms?.length > 0 && (
+          <p>อาการที่เสีย: {repair.intakeCondition.symptoms.join(', ')}</p>
+        )}
+        {repair.intakeCondition?.condition?.length > 0 && (
+          <p>สภาพ: {repair.intakeCondition.condition.join(', ')}</p>
+        )}
+        {repair.intakeCondition?.accessories?.length > 0 && (
+          <p>อุปกรณ์ที่ติดมาด้วย: {repair.intakeCondition.accessories.join(', ')}</p>
+        )}
+        <div className="grid grid-cols-3 gap-2 pt-2">
+          {intakePhotos.map((url, i) => (
+            <PhotoOrPending
+              key={i}
+              src={url}
+              alt=""
+              onClick={url ? () => setLightboxUrl(url) : undefined}
+              className="h-28 w-full rounded-md overflow-hidden cursor-zoom-in bg-orange-50"
+            />
+          ))}
+        </div>
+      </div>
 
       <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow-sm border border-orange-100 p-5 space-y-4">
         {error && (
@@ -119,6 +166,8 @@ export default function RepairClose() {
           </button>
         </div>
       </form>
+
+      <PhotoLightbox src={lightboxUrl} onClose={() => setLightboxUrl(null)} />
     </div>
   )
 }
