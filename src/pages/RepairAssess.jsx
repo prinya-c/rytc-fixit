@@ -137,7 +137,7 @@ export default function RepairAssess() {
             onChange={(e) => {
               const checked = e.target.checked
               setUnrepairable(checked)
-              if (checked) setNextStatus(8)
+              if (checked) setNextStatus(9)
             }}
             className="h-4 w-4"
           />
