@@ -105,11 +105,6 @@ export default function RepairList() {
             to={`/repairs/${r.id}`}
             className="bg-white rounded-xl shadow-sm border border-orange-100 overflow-hidden hover:shadow-md transition-shadow"
           >
-            <PhotoOrPending
-              src={r.photosIntake?.itemPhotos?.[0]}
-              alt={r.requester?.fullName}
-              className="h-36 w-full object-contain bg-orange-50"
-            />
             <div className="p-3 space-y-1">
               <div className="flex items-start justify-between gap-2">
                 <p className="font-semibold text-slate-800 truncate">{r.requester?.fullName}</p>
@@ -118,6 +113,11 @@ export default function RepairList() {
               <p className="text-sm text-slate-500">{categoryLabel(r.item?.category)}</p>
               <p className="text-xs text-slate-400">โทร {r.requester?.phone}</p>
             </div>
+            <PhotoOrPending
+              src={r.photosIntake?.itemPhotos?.[0]}
+              alt={r.requester?.fullName}
+              className="h-36 w-full object-contain bg-orange-50"
+            />
           </Link>
         ))}
       </div>
