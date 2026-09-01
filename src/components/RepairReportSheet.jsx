@@ -116,7 +116,7 @@ export default function RepairReportSheet({ repair, logs }) {
             <img
               src={repair.photosIntake.personPhoto}
               alt="รูปตอนรับลงทะเบียน"
-              className="max-w-full max-h-[38mm] object-contain"
+              className="max-w-full max-h-[55mm] object-contain"
             />
           )}
         </div>
