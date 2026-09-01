@@ -4,6 +4,9 @@ import QRCode from 'qrcode'
 import PrintTicket from '../components/PrintTicket'
 import { getRepair } from '../lib/repairs'
 
+// ลิงก์ติดตามสถานะสาธารณะ (Dashboard) — เหมือนกันทุกใบ ไม่ขึ้นกับรายการซ่อม
+const CONTACT_URL = 'https://fixit-app.rytc.ac.th'
+
 export default function RepairPrint() {
   const { id } = useParams()
   const navigate = useNavigate()
@@ -11,6 +14,11 @@ export default function RepairPrint() {
   const [qrDataUrl, setQrDataUrl] = useState(null)
   const [contactQrDataUrl, setContactQrDataUrl] = useState(null)
   const [error, setError] = useState('')
+
+  useEffect(() => {
+    // ลิงก์ติดตามสถานะไม่ขึ้นกับ id ของรายการ สร้างได้ทันทีโดยไม่ต้องรอโหลดข้อมูล
+    QRCode.toDataURL(CONTACT_URL, { margin: 1, width: 200 }).then(setContactQrDataUrl)
+  }, [])
 
   useEffect(() => {
     let active = true
@@ -22,20 +30,9 @@ export default function RepairPrint() {
       }
       setRepair(data)
       const url = `${window.location.origin}${import.meta.env.BASE_URL}repairs/${id}`
-      // ลิงก์ติดตามสถานะสาธารณะ ต้องเป็นรายการนี้เท่านั้น (publicId ไม่ใช่ repairId) ไม่ต้อง
-      // ล็อกอิน — ดู TrackStatus.jsx และ publicRepairs ใน repairs.js — รายการเก่าก่อนมีฟิลด์
-      // publicId (ถ้ามี) จะ fallback ไปหน้าแรกแทนไม่ให้ QR พังเป็นลิงก์เพี้ยน
-      const contactUrl = data.publicId
-        ? `${window.location.origin}${import.meta.env.BASE_URL}track/${data.publicId}`
-        : `${window.location.origin}${import.meta.env.BASE_URL}`
-      // width สูงกว่าที่แสดงจริง (h-32/h-14 ในหน้าเว็บ) เพื่อให้คมชัดตอนพิมพ์บนกระดาษจริง
-      Promise.all([
-        QRCode.toDataURL(url, { margin: 1, width: 400 }),
-        QRCode.toDataURL(contactUrl, { margin: 1, width: 200 }),
-      ]).then(([itemQr, contactQr]) => {
-        if (!active) return
-        setQrDataUrl(itemQr)
-        setContactQrDataUrl(contactQr)
+      // width สูงกว่าที่แสดงจริง (h-32 ~128px ในหน้าเว็บ) เพื่อให้คมชัดตอนพิมพ์บนกระดาษจริง
+      QRCode.toDataURL(url, { margin: 1, width: 400 }).then((dataUrl) => {
+        if (active) setQrDataUrl(dataUrl)
       })
     })
     return () => {

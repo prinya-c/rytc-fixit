@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
 import PhotoOrPending from '../components/PhotoOrPending'
 import StatusBadge from '../components/StatusBadge'
 import { useAuth } from '../context/AuthContext'
@@ -144,9 +143,9 @@ export default function Dashboard() {
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8 space-y-8">
-      <section className="bg-white rounded-2xl shadow-sm border border-orange-100 p-6 flex flex-wrap items-start gap-4">
+      <section className="bg-white rounded-2xl shadow-sm border border-orange-100 p-6 flex items-start gap-4">
         <img src={FIXIT_LOGO} alt="Fix it Center" className="h-16 w-16 object-contain shrink-0" />
-        <div className="flex-1 min-w-[240px]">
+        <div>
           <h1 className="text-2xl font-bold text-primary">RYTC-FixIT</h1>
           <p className="text-slate-600 mt-1">
             ระบบติดตามงานซ่อม โครงการ <strong>อาชีวะอาสา! ศูนย์ซ่อมสร้างเพื่อชุมชน (Fix it Center)</strong>{' '}
@@ -154,12 +153,6 @@ export default function Dashboard() {
             และยานพาหนะแก่ประชาชนโดยไม่คิดค่าใช้จ่าย พร้อมถ่ายทอดความรู้การดูแลรักษาเบื้องต้น
           </p>
         </div>
-        <Link
-          to="/track"
-          className="shrink-0 self-center rounded-md bg-primary hover:bg-primary-hover text-white px-4 py-2.5 text-sm font-medium whitespace-nowrap"
-        >
-          📷 สแกน QR เพื่อติดตามสถานะ
-        </Link>
       </section>
 
       <div className="flex flex-wrap items-center justify-between gap-2">
