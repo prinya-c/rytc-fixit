@@ -2,9 +2,22 @@ import react from '@vitejs/plugin-react'
 import { defineConfig } from 'vite'
 import { VitePWA } from 'vite-plugin-pwa'
 
-// Served from https://<owner>.github.io/rytc-fixit/ via GitHub Pages.
+// Served from https://rytc-fixit.pages.dev (Cloudflare Pages, root of the domain — not a
+// subpath like GitHub Pages was) — auto-deploys on every push to `main`.
+//
+// เลขเวอร์ชันที่ footer (APP_VERSION, ดู src/lib/version.js) ปกติมาจาก env var VITE_APP_VERSION
+// ที่ตั้งเองตอน build — Cloudflare Pages ไม่มีให้ตั้งในโค้ดแบบ GitHub Actions เดิม จึงใช้
+// CF_PAGES_COMMIT_SHA ที่ Cloudflare ฉีดให้อัตโนมัติทุก build เป็น fallback แทน ไม่ต้องไปตั้งค่า
+// อะไรเพิ่มใน Cloudflare Pages dashboard
+const appVersion =
+  process.env.VITE_APP_VERSION ||
+  (process.env.CF_PAGES_COMMIT_SHA ? `cf.${process.env.CF_PAGES_COMMIT_SHA.slice(0, 7)}` : 'dev')
+
 export default defineConfig({
-  base: '/rytc-fixit/',
+  base: '/',
+  define: {
+    'import.meta.env.VITE_APP_VERSION': JSON.stringify(appVersion),
+  },
   plugins: [
     react(),
     VitePWA({
@@ -19,8 +32,8 @@ export default defineConfig({
         description:
           'ระบบติดตามงานซ่อม โครงการอาชีวะอาสา! ศูนย์ซ่อมสร้างเพื่อชุมชน วิทยาลัยเทคนิคระยอง',
         lang: 'th',
-        start_url: '/rytc-fixit/',
-        scope: '/rytc-fixit/',
+        start_url: '/',
+        scope: '/',
         display: 'standalone',
         theme_color: '#f5821f',
         background_color: '#fffaf5',

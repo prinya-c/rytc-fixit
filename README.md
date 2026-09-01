@@ -181,12 +181,19 @@ npm run dev
 
 ## Deploy
 
-Push ขึ้น branch `main` แล้ว GitHub Actions (`.github/workflows/deploy.yml`) จะ build และ
-deploy ให้อัตโนมัติผ่าน GitHub Pages
+Host บน **Cloudflare Pages** (ไม่ใช่ GitHub Pages อีกต่อไป) — เชื่อมต่อ repo นี้กับ Cloudflare
+Pages ไว้แล้ว (Build command: `npm run build`, Output directory: `dist`) push ขึ้น branch `main`
+แล้ว Cloudflare จะ build และ deploy ให้อัตโนมัติ ไม่ต้องมี GitHub Actions workflow ใดๆ
 
-**ก่อนใช้งานครั้งแรก** ต้องเปิดใช้ GitHub Pages แบบ "GitHub Actions" source ที่
-Settings → Pages → Build and deployment → Source ของ repository นี้ก่อน ไม่เช่นนั้น workflow
-จะรันผ่านแต่ deploy step จะ fail
+แอปถูก serve ที่ root ของโดเมน `https://rytc-fixit.pages.dev` (ตั้งค่า `base: '/'` ใน
+`vite.config.js` ไว้ตรงกับการ host แบบนี้แล้ว — **ถ้าเปลี่ยนไป host แบบอื่นที่อยู่ใต้ subpath
+(เช่น GitHub Pages เดิม) ต้องกลับมาแก้ `base` ตรงนี้ให้ตรงกับ path จริงด้วยเสมอ** ไม่งั้นไฟล์ JS/
+CSS/รูปภาพจะโหลดไม่ขึ้นทั้งหมด)
 
-แอปจะถูก serve ที่ `https://<owner>.github.io/rytc-fixit/`
-(ตั้งค่า `base` ใน `vite.config.js` ไว้ตรงกับ path นี้แล้ว)
+**ก่อนใช้งานครั้งแรกบนโดเมนใหม่ (เช่นตอนย้ายมา Cloudflare Pages ครั้งแรก)** ต้องไปเพิ่มโดเมนนั้น
+เข้า Firebase Console → Authentication → Settings → **Authorized domains** ก่อนเสมอ
+(เช่น `rytc-fixit.pages.dev`) ไม่เช่นนั้นปุ่ม "เข้าสู่ระบบด้วย Google" จะ error เพราะโดเมนไม่ได้
+รับอนุญาต — เป็นขั้นตอนที่ต้องทำเองผ่าน Firebase Console เท่านั้น (ไม่มีใน repo ให้ deploy)
+
+**Custom domain** (เช่น `fixit-app.ryct.ac.th` ที่ QR ติดตามสถานะในใบลงทะเบียนชี้ไปไว้แล้ว)
+ยังไม่ได้ผูกกับ Cloudflare Pages ในตอนนี้ — เป็นงานแยกที่ต้องตั้งค่า DNS ของ `ryct.ac.th` เพิ่มทีหลัง
