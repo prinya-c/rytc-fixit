@@ -19,7 +19,7 @@ export default function RepairReport() {
     return (
       <div className="max-w-md mx-auto px-4 py-10 text-center space-y-3">
         <p className="text-danger">
-          พิมพ์ใบรายงานซ่อมได้เฉพาะรายการที่อยู่ในสถานะ "ส่งมอบ" แล้วเท่านั้น
+          พิมพ์ใบรายงานซ่อมได้เฉพาะรายการที่อยู่ในสถานะ "ซ่อมเสร็จแล้ว/รอส่งมอบ" แล้วเท่านั้น
         </p>
         <p className="text-sm text-slate-500">
           สถานะปัจจุบัน: {repair.status}. {repair.statusLabel}
