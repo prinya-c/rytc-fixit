@@ -113,7 +113,8 @@ export default function RepairForm() {
     if (category === 'vehicle' && !vehicleType) return 'กรุณาเลือกชนิดยานพาหนะ'
     if (category !== 'vehicle' && !itemName.trim()) return 'กรุณาระบุชื่อของสิ่งของ'
     if (category === 'vehicle' && !registrationNo.trim()) return 'กรุณากรอกเลขทะเบียนรถ'
-    if (!itemPhoto1 || !itemPhoto2) return 'กรุณาถ่ายรูปเครื่องใช้ที่นำมาซ่อม 2 รูป'
+    if (!itemPhoto1) return 'กรุณาถ่ายรูปบัตรประชาชน'
+    if (!itemPhoto2) return 'กรุณาถ่ายรูปเครื่องใช้ที่นำมาซ่อม'
     if (!personPhoto) return 'กรุณาถ่ายรูปคนคู่กับเครื่องใช้ 1 รูป'
     if (!staffName.trim() || !staffPhone.trim()) return 'กรุณากรอกข้อมูลเจ้าหน้าที่รับลงทะเบียน'
     return ''
@@ -334,8 +335,8 @@ export default function RepairForm() {
             onOtherText={setAccessoryOther}
           />
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <PhotoCaptureInput label="รูปเครื่องใช้ 1" file={itemPhoto1} onChange={setItemPhoto1} required />
-            <PhotoCaptureInput label="รูปเครื่องใช้ 2" file={itemPhoto2} onChange={setItemPhoto2} required />
+            <PhotoCaptureInput label="รูปบัตรประชาชน" file={itemPhoto1} onChange={setItemPhoto1} required />
+            <PhotoCaptureInput label="รูปเครื่องใช้" file={itemPhoto2} onChange={setItemPhoto2} required />
             <PhotoCaptureInput
               label="รูปคนคู่กับเครื่องใช้"
               file={personPhoto}
