@@ -3,17 +3,6 @@ import { Link, useParams } from 'react-router-dom'
 import PhotoOrPending from '../components/PhotoOrPending'
 import StatusBadge from '../components/StatusBadge'
 import { subscribePublicRepairByRepairId } from '../lib/repairs'
-import { ITEM_CATEGORIES, VEHICLE_TYPES } from '../lib/options'
-
-function categoryLabel(repair) {
-  if (!repair) return ''
-  const cat = ITEM_CATEGORIES.find((c) => c.value === repair.category)?.label ?? repair.category
-  if (repair.category === 'vehicle') {
-    const v = VEHICLE_TYPES.find((t) => t.value === repair.vehicleType)?.label
-    return v ? `${cat} (${v})` : cat
-  }
-  return cat
-}
 
 function formatDate(ts) {
   if (!ts?.toDate) return '-'
@@ -22,8 +11,9 @@ function formatDate(ts) {
 
 /**
  * แสดงเมื่อคนที่ยังไม่ได้ล็อกอินสแกน QR อันบนของใบลงทะเบียน (ลิงก์เดียวกับที่เจ้าหน้าที่ใช้ —
- * ดู RepairDetailGate.jsx) — โชว์แค่สถานะงานซ่อม ไม่มีชื่อ/เบอร์โทร/เลขบัตรประชาชนของผู้ขอรับ
- * บริการ อ่านจาก publicRepairs เท่านั้น (ดู subscribePublicRepairByRepairId ใน repairs.js)
+ * ดู RepairDetailGate.jsx) — โชว์ชื่อสิ่งของ/ยี่ห้อ-รุ่น/ชื่อผู้ขอรับบริการ/สถานะงานซ่อม ไม่มีเบอร์
+ * โทร/เลขบัตรประชาชน/รูปคน อ่านจาก publicRepairs เท่านั้น (ดู subscribePublicRepairByRepairId
+ * ใน repairs.js) ไม่แสดงประเภทสิ่งของ (category) เพราะชื่อสิ่งของสื่อความได้ตรงกว่าอยู่แล้ว
  */
 export default function RepairPublicStatus() {
   const { id } = useParams()
@@ -39,7 +29,15 @@ export default function RepairPublicStatus() {
       <h1 className="text-xl font-bold text-slate-800">สถานะงานซ่อม</h1>
 
       <div className="bg-white rounded-xl shadow-sm border border-orange-100 p-5 space-y-3">
-        <p className="font-semibold text-slate-800">{categoryLabel(repair)}</p>
+        {repair.itemName && <p className="font-semibold text-slate-800 text-lg">{repair.itemName}</p>}
+        {(repair.brand || repair.model) && (
+          <p className="text-sm text-slate-500">
+            {repair.brand && `ยี่ห้อ ${repair.brand}`}
+            {repair.brand && repair.model && ' · '}
+            {repair.model && `รุ่น ${repair.model}`}
+          </p>
+        )}
+        {repair.requesterName && <p className="text-sm text-slate-600">เจ้าของ: {repair.requesterName}</p>}
         <StatusBadge status={repair.status} unrepairable={repair.unrepairable} />
         <PhotoOrPending
           src={repair.itemPhoto}

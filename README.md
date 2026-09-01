@@ -47,8 +47,8 @@ QR บนใบลงทะเบียนมีลิงก์เดียว �
 แต่ไม่ redirect ไปหน้าล็อกอิน):
 
 - **ล็อกอินแล้ว** (และตั้งค่าโปรไฟล์เจ้าหน้าที่ครบแล้ว) → เห็นหน้ารายละเอียดเต็ม (`RepairDetail.jsx`)
-- **ยังไม่ล็อกอิน** → เห็นแค่สถานะงานซ่อม (`RepairPublicStatus.jsx`) ไม่มีชื่อ/เบอร์โทร/เลขบัตร
-  ประชาชนของผู้ขอรับบริการ
+- **ยังไม่ล็อกอิน** → เห็นชื่อสิ่งของ/ยี่ห้อ-รุ่น/ชื่อ-นามสกุลผู้ขอรับบริการ/สถานะงานซ่อม
+  (`RepairPublicStatus.jsx`) แต่ไม่มีเบอร์โทร/เลขบัตรประชาชน/รูปคน
 
 หน้าสถานะสาธารณะอ่านจาก `publicRepairs` (เปิด read สาธารณะอยู่แล้ว) แทนที่จะอ่าน `repairs/{id}`
 ตรงๆ (ปิดไว้เฉพาะเจ้าหน้าที่ที่ล็อกอิน) — แต่ `repairId` ที่ได้จาก URL ขึ้นต้นด้วยเลขบัตรประชาชน
@@ -125,12 +125,14 @@ repairs/{repairId}/statusLogs/{logId}   // ประวัติการเป�
   status, statusLabel, note?, reasonNote?, changedByUid, changedByName, changedAt
   // log แรกที่ status อยู่ใน 4/5/6 ใช้เป็น "วันที่เริ่มซ่อม" ในใบรายงานซ่อม (ไม่มีฟิลด์แยก)
 
-publicRepairs/{publicId}             // สำเนาไม่มี PII ของ repairs/{repairId} (doc id = publicId
-                                      // ของรายการนั้น ไม่ใช่ repairId), อ่านสาธารณะได้
+publicRepairs/{publicId}             // สำเนาแบบไม่มีข้อมูลอ่อนไหวของ repairs/{repairId}
+                                      // (doc id = publicId ของรายการนั้น ไม่ใช่ repairId),
+                                      // อ่านสาธารณะได้ — ไม่มีเบอร์โทร/เลขบัตรประชาชน/รูปคน
   repairIdHash: string                // SHA-256 ของ repairId — ใช้ query หาเอกสารนี้จาก URL
                                       // /repairs/:id โดยไม่ต้องเก็บ repairId ดิบ (มีเลขบัตร
                                       // ประชาชนปนอยู่) ไว้ใน collection ที่เปิดอ่านสาธารณะ
-  category, vehicleType?, status, statusLabel, unrepairable, itemPhoto, createdAt, updatedAt
+  category, vehicleType?, itemName?, brand?, model?, requesterName?,
+  status, statusLabel, unrepairable, itemPhoto, createdAt, updatedAt
 
 stats/summary                        // doc เดียว, อ่านได้แบบสาธารณะ (ไม่มีข้อมูลส่วนบุคคล)
   total, byCategory: { tool_machine, appliance, vehicle, other },

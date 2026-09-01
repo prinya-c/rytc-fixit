@@ -46,17 +46,31 @@ async function awaitIfOnline(writePromise) {
 }
 
 /**
- * publicRepairs/{repairId} คือสำเนาแบบ "ปลอดข้อมูลส่วนบุคคล" ของ repairs/{repairId}
- * เก็บเฉพาะ category, vehicleType, status, unrepairable, รูปสิ่งของ 1 รูป, วันที่, และ hash
- * ของ repairId (ดู repairIdHash ด้านล่าง) — ไม่มีชื่อ/เบอร์โทร/เลขบัตรประชาชน/รูปคน เพื่อให้
- * Dashboard สาธารณะ query แสดงรายการจริง (ไม่ใช่แค่ตัวเลขสรุป) ได้โดยไม่ต้องล็อกอิน — ดู
- * firestore.rules ที่เปิด read สาธารณะไว้เฉพาะ collection นี้ (นอกเหนือจาก stats/summary)
+ * publicRepairs/{repairId} คือสำเนาแบบ "ปลอดข้อมูลอ่อนไหว" ของ repairs/{repairId} เก็บ category,
+ * vehicleType, ชื่อสิ่งของ/ยี่ห้อ/รุ่น, ชื่อ-นามสกุลผู้ขอรับบริการ (ไม่มีเบอร์โทร/เลขบัตรประชาชน/
+ * รูปคน), status, unrepairable, รูปสิ่งของ 1 รูป, วันที่, และ hash ของ repairId (ดู repairIdHash
+ * ด้านล่าง) เพื่อให้ Dashboard สาธารณะ query แสดงรายการจริง (ไม่ใช่แค่ตัวเลขสรุป) และหน้าสถานะ
+ * สาธารณะ (RepairPublicStatus) แสดงรายละเอียดได้โดยไม่ต้องล็อกอิน — ดู firestore.rules ที่เปิด
+ * read สาธารณะไว้เฉพาะ collection นี้ (นอกเหนือจาก stats/summary)
  */
-function publicRepairFields({ repairIdHash, item, status, unrepairable, itemPhoto, createdAt, updatedAt }) {
+function publicRepairFields({
+  repairIdHash,
+  item,
+  requesterName,
+  status,
+  unrepairable,
+  itemPhoto,
+  createdAt,
+  updatedAt,
+}) {
   return {
     repairIdHash,
     category: item.category,
     vehicleType: item.vehicleType ?? null,
+    itemName: item.itemName ?? null,
+    brand: item.brand ?? null,
+    model: item.model ?? null,
+    requesterName: requesterName ?? null,
     status,
     statusLabel: statusLabel(status),
     unrepairable: !!unrepairable,
@@ -161,6 +175,7 @@ export async function createRepair(
       publicRepairFields({
         repairIdHash,
         item,
+        requesterName: requester?.fullName,
         status: 1,
         unrepairable: false,
         // ใช้รูปเครื่องใช้ (index 1) เป็นรูปแทนสาธารณะ ไม่ใช่รูปบัตรประชาชน (index 0)
@@ -269,6 +284,7 @@ export async function backfillPublicRepairs() {
         publicRepairFields({
           repairIdHash,
           item: data.item,
+          requesterName: data.requester?.fullName,
           status: data.status,
           unrepairable: data.unrepairable,
           itemPhoto: data.photosIntake?.itemPhotos?.[1],
@@ -307,6 +323,10 @@ export async function updateRepairIntake(repairId, { requester, item, intakeCond
       updateDoc(doc(db, PUBLIC_REPAIRS, current.publicId), {
         category: item.category,
         vehicleType: item.vehicleType ?? null,
+        itemName: item.itemName ?? null,
+        brand: item.brand ?? null,
+        model: item.model ?? null,
+        requesterName: requester?.fullName ?? null,
         updatedAt: serverTimestamp(),
       }),
     )
