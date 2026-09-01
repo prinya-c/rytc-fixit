@@ -1,11 +1,24 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
+import PhotoLightbox from '../components/PhotoLightbox'
+import PhotoOrPending from '../components/PhotoOrPending'
 import { useAuth } from '../context/AuthContext'
 import { changeRepairStatus, saveQualityCheck, subscribeRepair } from '../lib/repairs'
-import { STATUSES, UNREPAIRABLE_REASONS, suggestRepairStatus } from '../lib/options'
+import { ITEM_CATEGORIES, STATUSES, UNREPAIRABLE_REASONS, VEHICLE_TYPES, suggestRepairStatus } from '../lib/options'
 
 const inputClass =
   'w-full rounded-md border border-slate-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary'
+
+function categoryLabel(item) {
+  if (!item) return ''
+  const cat = ITEM_CATEGORIES.find((c) => c.value === item.category)?.label ?? item.category
+  if (item.category === 'vehicle') {
+    const v = VEHICLE_TYPES.find((t) => t.value === item.vehicleType)?.label
+    return v ? `${cat} (${v})` : cat
+  }
+  if (item.itemName) return `${cat}: ${item.itemName}`
+  return cat
+}
 
 function defaultNextStatus(repair) {
   if (repair.status === 3) return suggestRepairStatus(repair.item)
@@ -25,6 +38,7 @@ export default function RepairStatus() {
   const [reasonNote, setReasonNote] = useState('')
   const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
+  const [lightboxUrl, setLightboxUrl] = useState(null)
 
   // ฟิลด์เพิ่มเติมสำหรับใบรายงานซ่อม — กรอกเฉพาะตอนย้ายไปสถานะ "ตรวจสอบคุณภาพ" (7)
   const [technicianName, setTechnicianName] = useState('')
@@ -47,6 +61,13 @@ export default function RepairStatus() {
 
   if (repair === undefined) return <p className="text-center text-slate-400 py-10">กำลังโหลด...</p>
   if (repair === null) return <p className="text-center text-danger py-10">ไม่พบรายการนี้</p>
+
+  // แสดงครบ 3 ช่องเสมอ (ไม่กรอง null ทิ้ง) เพื่อให้เห็นว่ารูปไหนยังรอซิงก์จากคิวออฟไลน์อยู่
+  const intakePhotos = [
+    repair.photosIntake?.itemPhotos?.[0] ?? null,
+    repair.photosIntake?.itemPhotos?.[1] ?? null,
+    repair.photosIntake?.personPhoto ?? null,
+  ]
 
   const isQualityCheck = String(nextStatus) === '7'
 
@@ -96,6 +117,31 @@ export default function RepairStatus() {
       <p className="text-sm text-slate-500">
         {repair.requester?.fullName} · สถานะปัจจุบัน: {repair.status}. {repair.statusLabel}
       </p>
+
+      <div className="bg-white rounded-xl shadow-sm border border-orange-100 p-5 space-y-1 text-sm text-slate-600">
+        <p className="text-slate-800 font-medium">{categoryLabel(repair.item)}</p>
+        {repair.item?.brand && <p>ยี่ห้อ: {repair.item.brand}</p>}
+        {repair.intakeCondition?.symptoms?.length > 0 && (
+          <p>อาการที่เสีย: {repair.intakeCondition.symptoms.join(', ')}</p>
+        )}
+        {repair.intakeCondition?.condition?.length > 0 && (
+          <p>สภาพ: {repair.intakeCondition.condition.join(', ')}</p>
+        )}
+        {repair.intakeCondition?.accessories?.length > 0 && (
+          <p>อุปกรณ์ที่ติดมาด้วย: {repair.intakeCondition.accessories.join(', ')}</p>
+        )}
+        <div className="grid grid-cols-3 gap-2 pt-2">
+          {intakePhotos.map((url, i) => (
+            <PhotoOrPending
+              key={i}
+              src={url}
+              alt=""
+              onClick={url ? () => setLightboxUrl(url) : undefined}
+              className="h-28 w-full rounded-md overflow-hidden cursor-zoom-in bg-orange-50"
+            />
+          ))}
+        </div>
+      </div>
 
       <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow-sm border border-orange-100 p-5 space-y-4">
         {error && (
@@ -223,6 +269,8 @@ export default function RepairStatus() {
           </button>
         </div>
       </form>
+
+      <PhotoLightbox src={lightboxUrl} onClose={() => setLightboxUrl(null)} />
     </div>
   )
 }
