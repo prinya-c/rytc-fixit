@@ -39,9 +39,11 @@ export default function RepairList() {
     <div className="max-w-6xl mx-auto px-4 py-6 space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-xl font-bold text-slate-800">รายการงานซ่อม</h1>
+        {/* ซ่อนเฉพาะจอมือถือ — ซ้ำกับแท็บ "ลงทะเบียนใหม่" ใน BottomTabBar.jsx ที่โชว์คู่กันตลอด
+            จอ sm ขึ้นไปไม่มีแถบเมนูล่าง ปุ่มนี้ยังเป็นทางเดียวที่สะดวกสุดในหน้านี้ */}
         <Link
           to="/repairs/new"
-          className="bg-primary hover:bg-primary-hover text-white rounded-md px-4 py-2 text-sm font-medium"
+          className="hidden sm:inline-block bg-primary hover:bg-primary-hover text-white rounded-md px-4 py-2 text-sm font-medium"
         >
           + ลงทะเบียนใหม่
         </Link>
