@@ -66,7 +66,8 @@ repairs/{repairId}                   // doc id = "{เลขบัตรปร�
                                       // (เวลาเครื่อง ณ ตอนกดบันทึก) ดู buildRepairId() ใน repairs.js
   requester: { fullName, nationalId, phone,
                houseNo?, moo?, subDistrict?, district?, province? }
-  item: { category, vehicleType?, otherDetail?, registrationNo? }
+  item: { category, vehicleType?, otherDetail?, brand?, model?, registrationNo? }
+                                 // registrationNo บังคับกรอกเฉพาะ category = "vehicle" เท่านั้น
   publicId: string              // doc id ของสำเนาใน publicRepairs — คนละค่ากับ repairId โดย
                                  // ตั้งใจ เพื่อไม่ให้เลขบัตรประชาชนรั่วผ่าน document id ของ
                                  // collection ที่เปิดอ่านสาธารณะ

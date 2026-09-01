@@ -128,7 +128,9 @@ export default function RepairDetail() {
 
       <Section title="สิ่งของที่นำมาซ่อม">
         <p>ประเภท: {categoryLabel(repair.item)}</p>
-        {repair.item?.registrationNo && <p>เลขทะเบียน: {repair.item.registrationNo}</p>}
+        {repair.item?.brand && <p>ยี่ห้อ: {repair.item.brand}</p>}
+        {repair.item?.model && <p>รุ่น: {repair.item.model}</p>}
+        {repair.item?.registrationNo && <p>เลขทะเบียนรถ: {repair.item.registrationNo}</p>}
         <div className="text-sm text-slate-600 space-y-1 pt-1">
           {repair.intakeCondition?.symptoms?.length > 0 && (
             <p>อาการที่เสีย: {repair.intakeCondition.symptoms.join(', ')}</p>

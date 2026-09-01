@@ -84,6 +84,8 @@ export default function RepairForm() {
   const [category, setCategory] = useState('')
   const [vehicleType, setVehicleType] = useState('')
   const [otherDetail, setOtherDetail] = useState('')
+  const [brand, setBrand] = useState('')
+  const [model, setModel] = useState('')
   const [registrationNo, setRegistrationNo] = useState('')
 
   const [symptoms, setSymptoms] = useState([])
@@ -110,6 +112,7 @@ export default function RepairForm() {
     if (!category) return 'กรุณาเลือกประเภทของสิ่งที่นำมาซ่อม'
     if (category === 'vehicle' && !vehicleType) return 'กรุณาเลือกชนิดยานพาหนะ'
     if (category === 'other' && !otherDetail.trim()) return 'กรุณาระบุประเภทสิ่งของ'
+    if (category === 'vehicle' && !registrationNo.trim()) return 'กรุณากรอกเลขทะเบียนรถ'
     if (!itemPhoto1 || !itemPhoto2) return 'กรุณาถ่ายรูปเครื่องใช้ที่นำมาซ่อม 2 รูป'
     if (!personPhoto) return 'กรุณาถ่ายรูปคนคู่กับเครื่องใช้ 1 รูป'
     if (!staffName.trim() || !staffPhone.trim()) return 'กรุณากรอกข้อมูลเจ้าหน้าที่รับลงทะเบียน'
@@ -150,7 +153,9 @@ export default function RepairForm() {
           category,
           vehicleType: category === 'vehicle' ? vehicleType : null,
           otherDetail: category === 'other' ? otherDetail.trim() : null,
-          registrationNo: registrationNo.trim() || null,
+          brand: brand.trim() || null,
+          model: model.trim() || null,
+          registrationNo: category === 'vehicle' ? registrationNo.trim() : null,
         },
         intakeCondition: {
           symptoms,
@@ -281,12 +286,26 @@ export default function RepairForm() {
               className={inputClass}
             />
           )}
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">
-              เลขทะเบียนของสิ่งของที่นำมาซ่อม (ถ้ามี)
-            </label>
-            <input value={registrationNo} onChange={(e) => setRegistrationNo(e.target.value)} className={inputClass} />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">ยี่ห้อ</label>
+              <input value={brand} onChange={(e) => setBrand(e.target.value)} className={inputClass} />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">รุ่น</label>
+              <input value={model} onChange={(e) => setModel(e.target.value)} className={inputClass} />
+            </div>
           </div>
+          {category === 'vehicle' && (
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">เลขทะเบียนรถ *</label>
+              <input
+                value={registrationNo}
+                onChange={(e) => setRegistrationNo(e.target.value)}
+                className={inputClass}
+              />
+            </div>
+          )}
         </Section>
 
         <Section title="ส่วนที่ 3: อาการ สภาพ และรูปถ่าย">

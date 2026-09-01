@@ -36,7 +36,9 @@ export default function PrintTicket({ repair, qrDataUrl, contactQrDataUrl }) {
       <div>
         <p className="font-semibold text-base mb-0.5">สิ่งของที่นำมาซ่อม</p>
         <p>ประเภท: {categoryLabel(repair.item)}</p>
-        {repair.item.registrationNo && <p>เลขทะเบียน: {repair.item.registrationNo}</p>}
+        {repair.item.brand && <p>ยี่ห้อ: {repair.item.brand}</p>}
+        {repair.item.model && <p>รุ่น: {repair.item.model}</p>}
+        {repair.item.registrationNo && <p>เลขทะเบียนรถ: {repair.item.registrationNo}</p>}
       </div>
 
       <div>
