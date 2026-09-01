@@ -1,5 +1,5 @@
 import { openDB } from 'idb'
-import { uploadRepairPhoto } from './storageUpload'
+import { compressPhoto, uploadRepairPhoto } from './storageUpload'
 import { resolvePendingClosurePhoto, resolvePendingIntakePhoto } from './repairs'
 
 const DB_NAME = 'rytc-fixit-offline'
@@ -11,6 +11,8 @@ const STORE = 'pendingPhotoUploads'
  * คิวออฟไลน์ในตัว — ต้องเก็บไฟล์รูปไว้เองแล้วอัปโหลดซ้ำตอนกลับมาออนไลน์
  *
  * record: { id, repairId, kind: 'intake'|'closure', slot, subPath, file, createdAt, attempts, lastError }
+ * file ที่เก็บไว้ผ่านการบีบอัดมาแล้วเสมอ (ดู compressPhoto ใน storageUpload.js — เรียกก่อนเข้าคิว
+ * ใน uploadOrQueuePhoto ด้านล่าง) ไม่ใช่ไฟล์เต็มขนาดดิบจากกล้อง
  */
 function dbPromise() {
   return openDB(DB_NAME, 1, {
@@ -56,19 +58,22 @@ export async function enqueuePhotoUpload({ repairId, kind, slot, subPath, file }
 }
 
 /**
- * พยายามอัปโหลดรูปทันที ใช้ตอนกดบันทึกฟอร์ม (ลงทะเบียน/ปิดงาน) — ถ้าออฟไลน์อยู่แล้วจะข้ามไปเก็บ
- * ไว้ในคิวเลยโดยไม่เสียเวลารอ timeout, ถ้าออนไลน์แต่อัปโหลดไม่สำเร็จกลางคัน (เช่น หลุดสัญญาณ)
- * ก็ตกไปเก็บไว้ในคิวเช่นกัน คืนค่า download URL ถ้าสำเร็จ หรือ null ถ้าต้องรอซิงก์ภายหลัง
+ * พยายามอัปโหลดรูปทันที ใช้ตอนกดบันทึกฟอร์ม (ลงทะเบียน/ปิดงาน) — บีบอัดรูปให้เหลือไม่เกิน ~250KB
+ * ก่อนเสมอ (compressPhoto ใน storageUpload.js) ไม่ว่าจะอัปโหลดได้ทันทีหรือต้องเก็บคิวไว้ก่อน
+ * กันไม่ให้คิวออฟไลน์เปลืองพื้นที่เก็บในเครื่องด้วยไฟล์เต็มขนาดจากกล้อง — ถ้าออฟไลน์อยู่แล้วจะข้าม
+ * ไปเก็บไว้ในคิวเลยโดยไม่เสียเวลารอ timeout, ถ้าออนไลน์แต่อัปโหลดไม่สำเร็จกลางคัน (เช่น หลุด
+ * สัญญาณ) ก็ตกไปเก็บไว้ในคิวเช่นกัน คืนค่า download URL ถ้าสำเร็จ หรือ null ถ้าต้องรอซิงก์ภายหลัง
  */
 export async function uploadOrQueuePhoto({ repairId, kind, slot, subPath, file }) {
+  const compressed = await compressPhoto(file)
   if (navigator.onLine) {
     try {
-      return await uploadRepairPhoto(repairId, subPath, file)
+      return await uploadRepairPhoto(repairId, subPath, compressed)
     } catch {
       // อัปโหลดไม่สำเร็จ (เช่นหลุดสัญญาณกลางคัน) — ตกไปเก็บคิวไว้ด้านล่างแทน
     }
   }
-  await enqueuePhotoUpload({ repairId, kind, slot, subPath, file })
+  await enqueuePhotoUpload({ repairId, kind, slot, subPath, file: compressed })
   return null
 }
 
