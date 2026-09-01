@@ -64,6 +64,19 @@ export default defineConfig({
               expiration: { maxEntries: 20, maxAgeSeconds: 60 * 60 * 24 * 365 },
             },
           },
+          // รูปถ่ายงานซ่อม (intake/closure) จาก Firebase Storage — ไม่มีจุดไหนในแอปที่แก้ไข/
+          // อัปโหลดทับรูปเดิม (หน้าแก้ไขข้อมูลเริ่มต้นก็ตั้งใจไม่ให้แก้รูป) URL ของแต่ละรูปจึงคงที่
+          // ตลอดไป ใช้ CacheFirst ได้เต็มที่ — เปิดดูครั้งแรกค่อยโหลดจากเน็ต ครั้งต่อไป (รวมถึง
+          // ตอนออฟไลน์) ใช้จากเครื่องเลยไม่ยิงเน็ตซ้ำ
+          {
+            urlPattern: /^https:\/\/firebasestorage\.googleapis\.com\/.*/,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'repair-photos',
+              cacheableResponse: { statuses: [0, 200] },
+              expiration: { maxEntries: 300, maxAgeSeconds: 60 * 60 * 24 * 180 },
+            },
+          },
         ],
       },
     }),
