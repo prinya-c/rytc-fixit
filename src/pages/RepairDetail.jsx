@@ -71,55 +71,75 @@ export default function RepairDetail() {
   const closurePhotos = repair.closure
     ? [repair.closure.itemPhoto ?? null, repair.closure.personPhoto ?? null]
     : []
+  const canPrintReport = (repair.status === 8 || repair.status === 10) && !repair.unrepairable
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-6 space-y-5">
-      <div className="flex flex-wrap gap-2">
-        <Link
-          to={`/repairs/${id}/print`}
-          className="rounded-md bg-primary hover:bg-primary-hover text-white px-3 py-2 text-sm font-medium"
-        >
-          🖨️ พิมพ์ใบลงทะเบียน
-        </Link>
-        <Link
-          to={`/repairs/${id}/edit`}
-          className="rounded-md border border-slate-300 text-slate-600 px-3 py-2 text-sm font-medium hover:bg-slate-50"
-        >
-          ✏️ แก้ไขข้อมูลเริ่มต้น
-        </Link>
-        <Link
-          to={`/repairs/${id}/assess`}
-          className="rounded-md border border-primary text-primary px-3 py-2 text-sm font-medium hover:bg-orange-50"
-        >
-          คัดแยก/ประเมิน
-        </Link>
-        <Link
-          to={`/repairs/${id}/status`}
-          className="rounded-md border border-primary text-primary px-3 py-2 text-sm font-medium hover:bg-orange-50"
-        >
-          อัปเดตสถานะ
-        </Link>
-        <Link
-          to={`/repairs/${id}/close`}
-          className="rounded-md border border-success text-success px-3 py-2 text-sm font-medium hover:bg-green-50"
-        >
-          ปิดงาน/ส่งมอบ
-        </Link>
-        {(repair.status === 8 || repair.status === 10) && !repair.unrepairable && (
+      {/* จัดกลุ่มปุ่มตามลักษณะงานและความถี่การใช้: ขั้นตอนงานซ่อม (ใช้บ่อยสุด) → เอกสาร/พิมพ์
+          (ใช้เป็นครั้งคราว) → จัดการรายการ (ใช้น้อยสุด/มีความเสี่ยง) แต่ละกลุ่มคั่นด้วยเส้นบางๆ */}
+      <div className="space-y-3">
+        <div className="flex flex-wrap gap-2">
           <Link
-            to={`/repairs/${id}/report`}
-            className="rounded-md bg-success hover:bg-success-hover text-white px-3 py-2 text-sm font-medium"
+            to={`/repairs/${id}/assess`}
+            className="rounded-md border border-primary text-primary px-3 py-2 text-sm font-medium hover:bg-orange-50"
           >
-            🖨️ พิมพ์ใบรายงานซ่อม
+            คัดแยก/ประเมิน
           </Link>
-        )}
-        <button
-          onClick={handleDelete}
-          disabled={deleting}
-          className="rounded-md border border-danger text-danger px-3 py-2 text-sm font-medium hover:bg-red-50 disabled:opacity-60"
-        >
-          {deleting ? 'กำลังลบ...' : 'ลบรายการ'}
-        </button>
+          <Link
+            to={`/repairs/${id}/status`}
+            className="rounded-md border border-primary text-primary px-3 py-2 text-sm font-medium hover:bg-orange-50"
+          >
+            อัปเดตสถานะ
+          </Link>
+          <Link
+            to={`/repairs/${id}/close`}
+            className="rounded-md border border-success text-success px-3 py-2 text-sm font-medium hover:bg-green-50"
+          >
+            ปิดงาน/ส่งมอบ
+          </Link>
+        </div>
+
+        <div className="flex flex-wrap gap-2 pt-3 border-t border-slate-200">
+          <Link
+            to={`/repairs/${id}/print`}
+            className="rounded-md bg-primary hover:bg-primary-hover text-white px-3 py-2 text-sm font-medium"
+          >
+            🖨️ พิมพ์ใบลงทะเบียน
+          </Link>
+          {canPrintReport ? (
+            <Link
+              to={`/repairs/${id}/report`}
+              className="rounded-md bg-success hover:bg-success-hover text-white px-3 py-2 text-sm font-medium"
+            >
+              🖨️ พิมพ์ใบรายงานซ่อม
+            </Link>
+          ) : (
+            <button
+              type="button"
+              disabled
+              title="พิมพ์ได้เมื่องานซ่อมเสร็จแล้ว/ส่งมอบแล้วเท่านั้น (และไม่ใช่รายการที่ทำเครื่องหมายว่าซ่อมไม่ได้)"
+              className="rounded-md bg-slate-200 text-slate-400 px-3 py-2 text-sm font-medium cursor-not-allowed"
+            >
+              🖨️ พิมพ์ใบรายงานซ่อม
+            </button>
+          )}
+        </div>
+
+        <div className="flex flex-wrap gap-2 pt-3 border-t border-slate-200">
+          <Link
+            to={`/repairs/${id}/edit`}
+            className="rounded-md border border-slate-300 text-slate-600 px-3 py-2 text-sm font-medium hover:bg-slate-50"
+          >
+            ✏️ แก้ไขข้อมูลเริ่มต้น
+          </Link>
+          <button
+            onClick={handleDelete}
+            disabled={deleting}
+            className="rounded-md border border-danger text-danger px-3 py-2 text-sm font-medium hover:bg-red-50 disabled:opacity-60"
+          >
+            {deleting ? 'กำลังลบ...' : 'ลบรายการ'}
+          </button>
+        </div>
       </div>
 
       <div className="flex flex-wrap items-center justify-between gap-3">
