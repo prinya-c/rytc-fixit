@@ -18,7 +18,13 @@ import {
 import { db } from './firebase'
 import { statusLabel } from './options'
 import { deleteRepairPhotos } from './storageUpload'
-import { recordDeleteRepair, recordNewRepair, recordStatusChange, recordUnrepairableChange } from './stats'
+import {
+  recordCategoryChange,
+  recordDeleteRepair,
+  recordNewRepair,
+  recordStatusChange,
+  recordUnrepairableChange,
+} from './stats'
 
 const REPAIRS = 'repairs'
 const PUBLIC_REPAIRS = 'publicRepairs'
@@ -215,6 +221,37 @@ export async function backfillPublicRepairs() {
     }),
   )
   return count
+}
+
+/**
+ * แก้ไขข้อมูลเริ่มต้น (ผู้ขอรับบริการ/สิ่งของ/อาการ) ของรายการที่ลงทะเบียนไปแล้ว — ใช้แก้ข้อมูล
+ * กรอกผิดพลาดตอนรับลงทะเบียน ไม่แตะสถานะ/รูป/ประวัติงานซ่อม ถ้าประเภทเปลี่ยน จะปรับ
+ * stats.byCategory และ publicRepairs.category/vehicleType ให้ตรงกับของใหม่ด้วย
+ */
+export async function updateRepairIntake(repairId, { requester, item, intakeCondition }) {
+  const ref = doc(db, REPAIRS, repairId)
+  const snap = await getDoc(ref)
+  if (!snap.exists()) throw new Error('ไม่พบรายการนี้')
+  const current = snap.data()
+
+  await updateDoc(ref, {
+    requester,
+    item,
+    intakeCondition,
+    updatedAt: serverTimestamp(),
+  })
+
+  if (current.publicId) {
+    await updateDoc(doc(db, PUBLIC_REPAIRS, current.publicId), {
+      category: item.category,
+      vehicleType: item.vehicleType ?? null,
+      updatedAt: serverTimestamp(),
+    })
+  }
+
+  if (item.category !== current.item?.category) {
+    await recordCategoryChange(current.item?.category, item.category, current.status)
+  }
 }
 
 /** บันทึกผลคัดแยก/ประเมิน (ไม่เปลี่ยนสถานะเอง — เรียก changeRepairStatus ต่อจากหน้าฟอร์ม) */

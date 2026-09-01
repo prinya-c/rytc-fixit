@@ -87,6 +87,12 @@ export default function RepairDetail() {
           🖨️ พิมพ์ใบลงทะเบียน
         </Link>
         <Link
+          to={`/repairs/${id}/edit`}
+          className="rounded-md border border-slate-300 text-slate-600 px-3 py-2 text-sm font-medium hover:bg-slate-50"
+        >
+          ✏️ แก้ไขข้อมูลเริ่มต้น
+        </Link>
+        <Link
           to={`/repairs/${id}/assess`}
           className="rounded-md border border-primary text-primary px-3 py-2 text-sm font-medium hover:bg-orange-50"
         >

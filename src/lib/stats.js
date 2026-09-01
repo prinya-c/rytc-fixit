@@ -63,6 +63,18 @@ export async function recordStatusChange(category, oldStatusCode, newStatusCode)
   })
 }
 
+/** เรียกเมื่อแก้ไขข้อมูลเริ่มต้นแล้วเปลี่ยนประเภทของสิ่งของ — ย้ายตัวนับจากประเภทเดิมไปประเภทใหม่ */
+export async function recordCategoryChange(oldCategory, newCategory, statusCode) {
+  if (!oldCategory || !newCategory || oldCategory === newCategory) return
+  await applyStats({
+    byCategory: { [oldCategory]: increment(-1), [newCategory]: increment(1) },
+    byCategoryStatus: {
+      [oldCategory]: { [statusCode]: increment(-1) },
+      [newCategory]: { [statusCode]: increment(1) },
+    },
+  })
+}
+
 export async function recordUnrepairableChange(delta) {
   await applyStats({ unrepairableCount: increment(delta) })
 }
