@@ -39,10 +39,8 @@ export default function RepairPublicStatus() {
       <h1 className="text-xl font-bold text-slate-800">สถานะงานซ่อม</h1>
 
       <div className="bg-white rounded-xl shadow-sm border border-orange-100 p-5 space-y-3">
-        <div className="flex items-start justify-between gap-2">
-          <p className="font-semibold text-slate-800">{categoryLabel(repair)}</p>
-          <StatusBadge status={repair.status} unrepairable={repair.unrepairable} />
-        </div>
+        <p className="font-semibold text-slate-800">{categoryLabel(repair)}</p>
+        <StatusBadge status={repair.status} unrepairable={repair.unrepairable} />
         <PhotoOrPending
           src={repair.itemPhoto}
           alt=""
