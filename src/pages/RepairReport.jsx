@@ -52,8 +52,12 @@ export default function RepairReport() {
         </button>
       </div>
 
-      <div className="mx-auto w-[210mm] min-h-[297mm] bg-white">
-        <RepairReportSheet repair={repair} logs={logs} />
+      {/* print-preview-scroll: กันจอมือถือดันความกว้างทั้งหน้าเว็บเกินจอ (ดู index.css) —
+          ใบรายงานจริง 210mm กว้างกว่าจอมือถือทุกรุ่น ต้องเลื่อนดูในกรอบนี้แทน */}
+      <div className="print-preview-scroll">
+        <div className="mx-auto w-[210mm] min-h-[297mm] bg-white">
+          <RepairReportSheet repair={repair} logs={logs} />
+        </div>
       </div>
     </div>
   )

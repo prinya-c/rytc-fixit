@@ -25,9 +25,25 @@ body {
   background-color: #fffaf5;
 }
 
+/* ใบพิมพ์ (RepairPrint.jsx/RepairReport.jsx) กว้างตายตัว 210mm (~794px) เพื่อความถูกต้องตอน
+ * พิมพ์จริงบนกระดาษ A4 — บนจอมือถือที่แคบกว่านั้น ถ้าปล่อยให้ดันความกว้างทั้งหน้าเว็บ (<body>)
+ * ให้กว้างเกินจอ มือถือจะเข้าโหมด "ซูมออกทั้งหน้า" ซึ่งทำให้ position: fixed (เช่น
+ * BottomTabBar.jsx) หลุดจากการตรึงจอและเลื่อนหายไปตามเนื้อหาแทน — ครอบด้วย scroll ในกรอบตัวเอง
+ * (overflow-x-auto) กันไม่ให้ <body> กว้างเกินจอ แต่ตอนพิมพ์จริงเปิด overflow กลับคืนให้เห็นเนื้อหา
+ * เต็มตามปกติ (เบราว์เซอร์พิมพ์เนื้อหาที่ overflow ไว้เต็มอยู่แล้วโดยไม่ต้องพึ่งกฎนี้ก็ได้ แต่ใส่ไว้
+ * กันไว้ให้ชัวร์)
+ */
+.print-preview-scroll {
+  overflow-x: auto;
+}
+
 @media print {
   .no-print {
     display: none !important;
+  }
+
+  .print-preview-scroll {
+    overflow: visible;
   }
 
   @page {

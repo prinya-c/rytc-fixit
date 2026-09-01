@@ -64,11 +64,15 @@ export default function RepairPrint() {
         </button>
       </div>
 
-      <div className="mx-auto w-[210mm] h-[297mm] grid grid-cols-2 grid-rows-2 bg-white">
-        <PrintTicket repair={repair} qrDataUrl={qrDataUrl} contactQrDataUrl={contactQrDataUrl} />
-        <PrintTicket repair={repair} qrDataUrl={qrDataUrl} contactQrDataUrl={contactQrDataUrl} />
-        <PrintTicket repair={repair} qrDataUrl={qrDataUrl} contactQrDataUrl={contactQrDataUrl} />
-        <PrintTicket repair={repair} qrDataUrl={qrDataUrl} contactQrDataUrl={contactQrDataUrl} />
+      {/* print-preview-scroll: กันจอมือถือดันความกว้างทั้งหน้าเว็บเกินจอ (ดู index.css) —
+          ใบพิมพ์จริง 210mm กว้างกว่าจอมือถือทุกรุ่น ต้องเลื่อนดูในกรอบนี้แทน */}
+      <div className="print-preview-scroll">
+        <div className="mx-auto w-[210mm] h-[297mm] grid grid-cols-2 grid-rows-2 bg-white">
+          <PrintTicket repair={repair} qrDataUrl={qrDataUrl} contactQrDataUrl={contactQrDataUrl} />
+          <PrintTicket repair={repair} qrDataUrl={qrDataUrl} contactQrDataUrl={contactQrDataUrl} />
+          <PrintTicket repair={repair} qrDataUrl={qrDataUrl} contactQrDataUrl={contactQrDataUrl} />
+          <PrintTicket repair={repair} qrDataUrl={qrDataUrl} contactQrDataUrl={contactQrDataUrl} />
+        </div>
       </div>
     </div>
   )
