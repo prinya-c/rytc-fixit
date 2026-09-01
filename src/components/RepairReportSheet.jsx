@@ -87,36 +87,38 @@ export default function RepairReportSheet({ repair, logs }) {
         <p>ปีงบประมาณ: {fiscalYear(repair.intake?.registeredAt)}</p>
       </div>
 
-      <div className="grid grid-cols-2 border border-slate-500 min-h-[40mm]">
+      <div className="grid grid-cols-2 border border-slate-500">
         <div className="p-2 border-r border-slate-500">
           วัน/เดือน/ปี: {fmtDate(repair.intake?.registeredAt)} &nbsp; เวลา: {fmtTime(repair.intake?.registeredAt)}
         </div>
-        <div className="p-2 flex flex-col items-center">
-          <p className="self-start">เลขที่: {repair.id}</p>
+        <div className="p-2">เลขที่: {repair.id}</div>
+      </div>
+
+      <div className="grid grid-cols-2 border border-t-0 border-slate-500">
+        <div className="p-2 border-r border-slate-500 space-y-1">
+          <p className="font-semibold">ส่วนของผู้รับบริการ</p>
+          <p>ชื่อ-สกุล: {repair.requester?.fullName}</p>
+          <p>บัตรประจำตัวประชาชน: {repair.requester?.nationalId}</p>
+          <p>ที่อยู่: {formatAddress(repair.requester ?? {})}</p>
+          <p>โทรศัพท์: {repair.requester?.phone}</p>
+          <p>สิ่งของที่นำมาซ่อม: {itemDescription(repair.item)}</p>
+          <p className="font-semibold mt-1">ประเภทเครื่องใช้ที่ซ่อม</p>
+          <div className="flex flex-wrap gap-x-5 gap-y-1">
+            {ITEM_CATEGORIES.map((c) => (
+              <span key={c.value}>
+                {repair.item?.category === c.value ? '☑' : '☐'} {c.label}
+              </span>
+            ))}
+          </div>
+        </div>
+        <div className="p-2 flex items-center justify-center">
           {repair.photosIntake?.personPhoto && (
             <img
               src={repair.photosIntake.personPhoto}
               alt="รูปตอนรับลงทะเบียน"
-              className="mt-1 max-h-[32mm] object-contain"
+              className="max-w-full max-h-[38mm] object-contain"
             />
           )}
-        </div>
-      </div>
-
-      <div className="border border-t-0 border-slate-500 p-2 space-y-1">
-        <p className="font-semibold">ส่วนของผู้รับบริการ</p>
-        <p>ชื่อ-สกุล: {repair.requester?.fullName}</p>
-        <p>บัตรประจำตัวประชาชน: {repair.requester?.nationalId}</p>
-        <p>ที่อยู่: {formatAddress(repair.requester ?? {})}</p>
-        <p>โทรศัพท์: {repair.requester?.phone}</p>
-        <p>สิ่งของที่นำมาซ่อม: {itemDescription(repair.item)}</p>
-        <p className="font-semibold mt-1">ประเภทเครื่องใช้ที่ซ่อม</p>
-        <div className="flex flex-wrap gap-x-5 gap-y-1">
-          {ITEM_CATEGORIES.map((c) => (
-            <span key={c.value}>
-              {repair.item?.category === c.value ? '☑' : '☐'} {c.label}
-            </span>
-          ))}
         </div>
       </div>
 
