@@ -4,7 +4,13 @@ import PhotoLightbox from '../components/PhotoLightbox'
 import PhotoOrPending from '../components/PhotoOrPending'
 import { useAuth } from '../context/AuthContext'
 import { changeRepairStatus, saveAssessment, subscribeRepair } from '../lib/repairs'
-import { DAMAGE_LEVELS, ITEM_CATEGORIES, STATUSES, UNREPAIRABLE_REASONS, VEHICLE_TYPES } from '../lib/options'
+import {
+  DAMAGE_LEVELS,
+  ITEM_CATEGORIES,
+  STATUSES_SELECTABLE,
+  UNREPAIRABLE_REASONS,
+  VEHICLE_TYPES,
+} from '../lib/options'
 
 const inputClass =
   'w-full rounded-md border border-slate-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary'
@@ -186,7 +192,7 @@ export default function RepairAssess() {
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">ส่งต่อไปสถานะ</label>
             <select value={nextStatus} onChange={(e) => setNextStatus(e.target.value)} className={inputClass}>
-              {STATUSES.filter((s) => s.code >= 2).map((s) => (
+              {STATUSES_SELECTABLE.filter((s) => s.code >= 2).map((s) => (
                 <option key={s.code} value={s.code}>
                   {s.code}. {s.label}
                 </option>

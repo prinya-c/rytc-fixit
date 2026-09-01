@@ -15,11 +15,12 @@ export default function RepairReport() {
   if (repair === undefined) return <p className="text-center text-slate-400 py-10">กำลังโหลด...</p>
   if (repair === null) return <p className="text-center text-danger py-10">ไม่พบรายการนี้</p>
 
-  if (repair.status !== 8) {
+  if ((repair.status !== 8 && repair.status !== 10) || repair.unrepairable) {
     return (
       <div className="max-w-md mx-auto px-4 py-10 text-center space-y-3">
         <p className="text-danger">
-          พิมพ์ใบรายงานซ่อมได้เฉพาะรายการที่อยู่ในสถานะ "ซ่อมเสร็จแล้ว/รอส่งมอบ" แล้วเท่านั้น
+          พิมพ์ใบรายงานซ่อมได้เฉพาะรายการที่ซ่อมสำเร็จและอยู่ในสถานะ "ซ่อมเสร็จแล้ว/รอส่งมอบ"
+          หรือ "ส่งมอบ/ส่งคืนแล้ว" เท่านั้น
         </p>
         <p className="text-sm text-slate-500">
           สถานะปัจจุบัน: {repair.status}. {repair.statusLabel}

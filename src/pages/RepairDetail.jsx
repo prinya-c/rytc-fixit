@@ -104,7 +104,7 @@ export default function RepairDetail() {
         >
           ปิดงาน/ส่งมอบ
         </Link>
-        {repair.status === 8 && (
+        {(repair.status === 8 || repair.status === 10) && !repair.unrepairable && (
           <Link
             to={`/repairs/${id}/report`}
             className="rounded-md bg-success hover:bg-success-hover text-white px-3 py-2 text-sm font-medium"

@@ -349,7 +349,7 @@ export async function changeRepairStatus(
   }
 }
 
-/** ปิดงาน/ส่งมอบคืน — บันทึกรูป+ผู้รับคืน แล้วเปลี่ยนสถานะเป็น "ส่งมอบ" (8) */
+/** ปิดงาน/ส่งมอบคืน — บันทึกรูป+ผู้รับคืน แล้วเปลี่ยนสถานะเป็น "ส่งมอบ/ส่งคืนแล้ว" (10) */
 export async function closeRepair(repairId, { itemPhoto, personPhoto, receiverName, receiverRelation, staffUid, staffName }) {
   // itemPhoto/personPhoto เป็น null ได้ถ้ายังอัปโหลดไม่สำเร็จตอนออฟไลน์ — เติมเข้า pendingPhotos
   // แบบ arrayUnion เพื่อไม่ทับ slot ฝั่ง intake ที่อาจยังค้างอยู่ (ไม่น่าเกิดแต่กันไว้)
@@ -371,7 +371,7 @@ export async function closeRepair(repairId, { itemPhoto, personPhoto, receiverNa
     updatedAt: serverTimestamp(),
   })
   await changeRepairStatus(repairId, {
-    newStatus: 8,
+    newStatus: 10,
     note: 'ปิดงาน/ส่งมอบคืนเรียบร้อย',
     unrepairable: undefined,
     staffUid,

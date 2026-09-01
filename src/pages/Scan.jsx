@@ -16,7 +16,7 @@ function extractRepairId(text) {
 
 function destinationFor(repair) {
   if (repair.status === 1) return `/repairs/${repair.id}/assess`
-  if (repair.status === 8) return `/repairs/${repair.id}`
+  if (repair.status === 8 || repair.status === 10) return `/repairs/${repair.id}`
   return `/repairs/${repair.id}/status`
 }
 

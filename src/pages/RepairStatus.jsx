@@ -4,7 +4,13 @@ import PhotoLightbox from '../components/PhotoLightbox'
 import PhotoOrPending from '../components/PhotoOrPending'
 import { useAuth } from '../context/AuthContext'
 import { changeRepairStatus, saveQualityCheck, subscribeRepair } from '../lib/repairs'
-import { ITEM_CATEGORIES, STATUSES, UNREPAIRABLE_REASONS, VEHICLE_TYPES, suggestRepairStatus } from '../lib/options'
+import {
+  ITEM_CATEGORIES,
+  STATUSES_SELECTABLE,
+  UNREPAIRABLE_REASONS,
+  VEHICLE_TYPES,
+  suggestRepairStatus,
+} from '../lib/options'
 
 const inputClass =
   'w-full rounded-md border border-slate-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary'
@@ -155,7 +161,7 @@ export default function RepairStatus() {
             onChange={(e) => handleNextStatusChange(e.target.value)}
             className={inputClass}
           >
-            {STATUSES.map((s) => (
+            {STATUSES_SELECTABLE.map((s) => (
               <option key={s.code} value={s.code}>
                 {s.code}. {s.label}
               </option>
