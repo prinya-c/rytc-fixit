@@ -113,6 +113,8 @@ export default function RepairForm() {
     if (category === 'vehicle' && !vehicleType) return 'กรุณาเลือกชนิดยานพาหนะ'
     if (category !== 'vehicle' && !itemName.trim()) return 'กรุณาระบุชื่อของสิ่งของ'
     if (category === 'vehicle' && !registrationNo.trim()) return 'กรุณากรอกเลขทะเบียนรถ'
+    if (!brand.trim()) return 'กรุณากรอกยี่ห้อ (หากไม่มีให้ใส่เครื่องหมาย -)'
+    if (!model.trim()) return 'กรุณากรอกรุ่น (หากไม่มีให้ใส่เครื่องหมาย -)'
     if (!itemPhoto1) return 'กรุณาถ่ายรูปบัตรประชาชน'
     if (!itemPhoto2) return 'กรุณาถ่ายรูปเครื่องใช้ที่นำมาซ่อม'
     if (!personPhoto) return 'กรุณาถ่ายรูปคนคู่กับเครื่องใช้ 1 รูป'
@@ -289,12 +291,22 @@ export default function RepairForm() {
           )}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">ยี่ห้อ</label>
-              <input value={brand} onChange={(e) => setBrand(e.target.value)} className={inputClass} />
+              <label className="block text-sm font-medium text-slate-700 mb-1">ยี่ห้อ *</label>
+              <input
+                placeholder="หากไม่มีให้ใส่เครื่องหมาย -"
+                value={brand}
+                onChange={(e) => setBrand(e.target.value)}
+                className={inputClass}
+              />
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">รุ่น</label>
-              <input value={model} onChange={(e) => setModel(e.target.value)} className={inputClass} />
+              <label className="block text-sm font-medium text-slate-700 mb-1">รุ่น *</label>
+              <input
+                placeholder="หากไม่มีให้ใส่เครื่องหมาย -"
+                value={model}
+                onChange={(e) => setModel(e.target.value)}
+                className={inputClass}
+              />
             </div>
           </div>
           {category === 'vehicle' && (
