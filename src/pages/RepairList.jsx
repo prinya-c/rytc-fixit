@@ -116,6 +116,9 @@ export default function RepairList() {
             <PhotoOrPending
               src={r.photosIntake?.itemPhotos?.[1]}
               alt={r.requester?.fullName}
+              repairId={r.id}
+              kind="intake"
+              slot="item2"
               className="h-36 w-full object-contain bg-orange-50"
             />
           </Link>
