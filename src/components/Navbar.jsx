@@ -23,8 +23,9 @@ export default function Navbar() {
           </span>
         </Link>
 
+        {/* จอมือถือ (< sm) ใช้ BottomTabBar.jsx แทน — เมนูนี้ซ่อนไว้กันซ้ำซ้อน/กัน wrap ไม่แน่นอน */}
         {staffProfile && (
-          <nav className="flex flex-wrap items-center gap-1">
+          <nav className="hidden sm:flex items-center gap-1">
             <NavLink to="/repairs" className={navLinkClass} end>
               รายการงานซ่อม
             </NavLink>

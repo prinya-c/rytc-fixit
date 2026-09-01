@@ -4,6 +4,7 @@ import { AuthProvider } from './context/AuthContext'
 import ErrorBoundary from './components/ErrorBoundary'
 import PrivateRoute from './components/PrivateRoute'
 import Navbar from './components/Navbar'
+import BottomTabBar from './components/BottomTabBar'
 import Footer from './components/Footer'
 import OnlineStatusBanner from './components/OnlineStatusBanner'
 import PwaUpdatePrompt from './components/PwaUpdatePrompt'
@@ -34,7 +35,9 @@ export default function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
-        <div className="min-h-screen bg-[#fffaf5] flex flex-col">
+        {/* กันเนื้อหาโดน BottomTabBar.jsx (ตรึงล่างจอ เฉพาะจอมือถือ) บังตอนเลื่อนสุดหน้า —
+            รวม safe-area-inset-bottom ด้วยเผื่อมือถือมี home indicator/gesture bar ทับพื้นที่ล่าง */}
+        <div className="min-h-screen bg-[#fffaf5] flex flex-col pb-[calc(4rem+env(safe-area-inset-bottom))] sm:pb-0">
           <PwaUpdatePrompt />
           <OnlineStatusBanner />
           <Navbar />
@@ -59,6 +62,7 @@ export default function App() {
             </ErrorBoundary>
           </div>
           <Footer />
+          <BottomTabBar />
         </div>
       </BrowserRouter>
     </AuthProvider>
