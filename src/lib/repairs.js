@@ -31,8 +31,9 @@ const PUBLIC_REPAIRS = 'publicRepairs'
 
 /**
  * publicRepairs/{repairId} คือสำเนาแบบ "ปลอดข้อมูลส่วนบุคคล" ของ repairs/{repairId}
- * เก็บเฉพาะ category, vehicleType, status, unrepairable, รูปสิ่งของ 1 รูป, วันที่ —
- * ไม่มีชื่อ/เบอร์โทร/เลขบัตรประชาชน/รูปคน เพื่อให้ Dashboard สาธารณะ query แสดงรายการจริง
+ * เก็บเฉพาะ category, vehicleType, ชื่อ/ยี่ห้อ/รุ่นของสิ่งของ (ไม่ใช่ข้อมูลส่วนบุคคล),
+ * status, unrepairable, รูปสิ่งของ 1 รูป, วันที่ — ไม่มีชื่อ/เบอร์โทร/เลขบัตรประชาชน/รูปคน
+ * เพื่อให้ Dashboard สาธารณะและหน้าติดตามสถานะ (/track/:publicId) query แสดงรายการจริง
  * (ไม่ใช่แค่ตัวเลขสรุป) ได้โดยไม่ต้องล็อกอิน — ดู firestore.rules ที่เปิด read สาธารณะไว้เฉพาะ
  * collection นี้ (นอกเหนือจาก stats/summary)
  */
@@ -40,6 +41,9 @@ function publicRepairFields({ item, status, unrepairable, itemPhoto, createdAt, 
   return {
     category: item.category,
     vehicleType: item.vehicleType ?? null,
+    itemName: item.itemName ?? null,
+    brand: item.brand ?? null,
+    model: item.model ?? null,
     status,
     statusLabel: statusLabel(status),
     unrepairable: !!unrepairable,
@@ -144,6 +148,13 @@ export function subscribeRepair(repairId, callback) {
   })
 }
 
+/** ใช้โดยหน้าติดตามสถานะสาธารณะ (/track/:publicId) — อ่านจาก publicRepairs เท่านั้น ไม่ต้องล็อกอิน */
+export function subscribePublicRepair(publicId, callback) {
+  return onSnapshot(doc(db, PUBLIC_REPAIRS, publicId), (snap) => {
+    callback(snap.exists() ? { id: snap.id, ...snap.data() } : null)
+  })
+}
+
 export async function getRepair(repairId) {
   const snap = await getDoc(doc(db, REPAIRS, repairId))
   return snap.exists() ? { id: snap.id, ...snap.data() } : null
@@ -226,7 +237,7 @@ export async function backfillPublicRepairs() {
 /**
  * แก้ไขข้อมูลเริ่มต้น (ผู้ขอรับบริการ/สิ่งของ/อาการ) ของรายการที่ลงทะเบียนไปแล้ว — ใช้แก้ข้อมูล
  * กรอกผิดพลาดตอนรับลงทะเบียน ไม่แตะสถานะ/รูป/ประวัติงานซ่อม ถ้าประเภทเปลี่ยน จะปรับ
- * stats.byCategory และ publicRepairs.category/vehicleType ให้ตรงกับของใหม่ด้วย
+ * stats.byCategory และฟิลด์สิ่งของใน publicRepairs (ที่หน้าติดตามสถานะสาธารณะใช้) ให้ตรงด้วย
  */
 export async function updateRepairIntake(repairId, { requester, item, intakeCondition }) {
   const ref = doc(db, REPAIRS, repairId)
@@ -245,6 +256,9 @@ export async function updateRepairIntake(repairId, { requester, item, intakeCond
     await updateDoc(doc(db, PUBLIC_REPAIRS, current.publicId), {
       category: item.category,
       vehicleType: item.vehicleType ?? null,
+      itemName: item.itemName ?? null,
+      brand: item.brand ?? null,
+      model: item.model ?? null,
       updatedAt: serverTimestamp(),
     })
   }
