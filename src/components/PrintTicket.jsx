@@ -7,8 +7,14 @@ function categoryLabel(item) {
     const v = VEHICLE_TYPES.find((t) => t.value === item.vehicleType)?.label
     return v ? `${cat} (${v})` : cat
   }
-  if (item.itemName) return `${cat}: ${item.itemName}`
   return cat
+}
+
+function brandModelLine(item) {
+  const parts = []
+  if (item.brand) parts.push(`ยี่ห้อ: ${item.brand}`)
+  if (item.model) parts.push(`รุ่น: ${item.model}`)
+  return parts.join(' ')
 }
 
 export default function PrintTicket({ repair, qrDataUrl, contactQrDataUrl }) {
@@ -18,10 +24,10 @@ export default function PrintTicket({ repair, qrDataUrl, contactQrDataUrl }) {
         <div>
           <img src={FIXIT_LOGO} alt="Fix it Center" className="h-10 w-10 object-contain" />
           <p className="font-bold text-lg leading-tight mt-1">ใบลงทะเบียนรับซ่อม</p>
-          <p className="font-bold text-base text-primary leading-tight">RYTC-FixIT</p>
-          <p className="text-xs text-slate-500 mt-1">ศูนย์ซ่อมสร้างเพื่อชุมชน วิทยาลัยเทคนิคระยอง</p>
+          <p className="font-bold text-base text-primary leading-tight">FixIT Center</p>
+          <p className="text-xs text-slate-500 mt-1">ศูนย์ซ่อมสร้างเพื่อชุมชน อาชีวศึกษาจังหวัดระยอง</p>
         </div>
-        <img src={qrDataUrl} alt="QR" className="h-32 w-32 shrink-0" />
+        <img src={qrDataUrl} alt="QR" className="h-24 w-24 shrink-0" />
       </div>
 
       <div>
@@ -34,8 +40,8 @@ export default function PrintTicket({ repair, qrDataUrl, contactQrDataUrl }) {
       <div>
         <p className="font-semibold text-base mb-0.5">สิ่งของที่นำมาซ่อม</p>
         <p>ประเภท: {categoryLabel(repair.item)}</p>
-        {repair.item.brand && <p>ยี่ห้อ: {repair.item.brand}</p>}
-        {repair.item.model && <p>รุ่น: {repair.item.model}</p>}
+        {repair.item.itemName && <p>สิ่งที่ส่งซ่อม: {repair.item.itemName}</p>}
+        {brandModelLine(repair.item) && <p>{brandModelLine(repair.item)}</p>}
         {repair.item.registrationNo && <p>เลขทะเบียนรถ: {repair.item.registrationNo}</p>}
       </div>
 
