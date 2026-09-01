@@ -30,6 +30,22 @@ const REPAIRS = 'repairs'
 const PUBLIC_REPAIRS = 'publicRepairs'
 
 /**
+ * setDoc()/updateDoc()/addDoc() คิวการเขียนลง local cache ทันทีไม่ว่าจะมีเน็ตหรือไม่ก็ตาม
+ * (persistentLocalCache ใน firebase.js) แต่ Promise ที่คืนมาจะไม่ resolve จนกว่าเซิร์ฟเวอร์ตอบรับ
+ * จริง — ถ้า await ตอนออฟไลน์จะค้างไม่จบจนกว่าจะกลับมามีเน็ต (ปุ่มบันทึกในหน้าฟอร์มเลยติดค้าง
+ * ตลอดไป ทั้งที่ข้อมูลถูกคิวไว้แล้วจริงๆ) ใช้ฟังก์ชันนี้แทน await ตรงๆ กับทุกคำสั่งเขียนที่มีปุ่ม
+ * กดแล้วรอผลอยู่หน้าจอ — รอเฉพาะตอนออนไลน์ ส่วนตอนออฟไลน์ปล่อยให้ sync เองเบื้องหลัง (เก็บ
+ * .catch ไว้กันไม่ให้ error ที่อาจเกิดตอน sync ภายหลังกลายเป็น unhandled rejection)
+ */
+async function awaitIfOnline(writePromise) {
+  if (navigator.onLine) {
+    await writePromise
+  } else {
+    writePromise.catch(() => {})
+  }
+}
+
+/**
  * publicRepairs/{repairId} คือสำเนาแบบ "ปลอดข้อมูลส่วนบุคคล" ของ repairs/{repairId}
  * เก็บเฉพาะ category, vehicleType, status, unrepairable, รูปสิ่งของ 1 รูป, วันที่, และ hash
  * ของ repairId (ดู repairIdHash ด้านล่าง) — ไม่มีชื่อ/เบอร์โทร/เลขบัตรประชาชน/รูปคน เพื่อให้
@@ -112,47 +128,49 @@ export async function createRepair(
   if (!photosIntake?.itemPhotos?.[1]) pendingPhotos.push('intake:item2')
   if (!photosIntake?.personPhoto) pendingPhotos.push('intake:person')
 
-  await setDoc(ref, {
-    requester,
-    item,
-    intakeCondition,
-    photosIntake,
-    intake: { staffUid, staffName, staffPhone, registeredAt: now },
-    status: 1,
-    statusLabel: statusLabel(1),
-    unrepairable: false,
-    unrepairableReason: null,
-    unrepairableNote: null,
-    assessment: null,
-    closure: null,
-    publicId,
-    pendingPhotos,
-    createdAt: now,
-    updatedAt: now,
-  })
-  await addDoc(collection(db, REPAIRS, ref.id, 'statusLogs'), {
-    status: 1,
-    statusLabel: statusLabel(1),
-    note: 'รับลงทะเบียน',
-    reasonNote: null,
-    changedByUid: staffUid,
-    changedByName: staffName,
-    changedAt: now,
-  })
-  await setDoc(
-    doc(db, PUBLIC_REPAIRS, publicId),
-    publicRepairFields({
-      repairIdHash,
+  await awaitIfOnline(Promise.all([
+    setDoc(ref, {
+      requester,
       item,
+      intakeCondition,
+      photosIntake,
+      intake: { staffUid, staffName, staffPhone, registeredAt: now },
       status: 1,
+      statusLabel: statusLabel(1),
       unrepairable: false,
-      // ใช้รูปเครื่องใช้ (index 1) เป็นรูปแทนสาธารณะ ไม่ใช่รูปบัตรประชาชน (index 0)
-      itemPhoto: photosIntake?.itemPhotos?.[1],
+      unrepairableReason: null,
+      unrepairableNote: null,
+      assessment: null,
+      closure: null,
+      publicId,
+      pendingPhotos,
       createdAt: now,
       updatedAt: now,
     }),
-  )
-  await recordNewRepair(item.category)
+    addDoc(collection(db, REPAIRS, ref.id, 'statusLogs'), {
+      status: 1,
+      statusLabel: statusLabel(1),
+      note: 'รับลงทะเบียน',
+      reasonNote: null,
+      changedByUid: staffUid,
+      changedByName: staffName,
+      changedAt: now,
+    }),
+    setDoc(
+      doc(db, PUBLIC_REPAIRS, publicId),
+      publicRepairFields({
+        repairIdHash,
+        item,
+        status: 1,
+        unrepairable: false,
+        // ใช้รูปเครื่องใช้ (index 1) เป็นรูปแทนสาธารณะ ไม่ใช่รูปบัตรประชาชน (index 0)
+        itemPhoto: photosIntake?.itemPhotos?.[1],
+        createdAt: now,
+        updatedAt: now,
+      }),
+    ),
+    recordNewRepair(item.category),
+  ]))
   return ref.id
 }
 
@@ -275,39 +293,47 @@ export async function updateRepairIntake(repairId, { requester, item, intakeCond
   if (!snap.exists()) throw new Error('ไม่พบรายการนี้')
   const current = snap.data()
 
-  await updateDoc(ref, {
-    requester,
-    item,
-    intakeCondition,
-    updatedAt: serverTimestamp(),
-  })
+  const writes = [
+    updateDoc(ref, {
+      requester,
+      item,
+      intakeCondition,
+      updatedAt: serverTimestamp(),
+    }),
+  ]
 
   if (current.publicId) {
-    await updateDoc(doc(db, PUBLIC_REPAIRS, current.publicId), {
-      category: item.category,
-      vehicleType: item.vehicleType ?? null,
-      updatedAt: serverTimestamp(),
-    })
+    writes.push(
+      updateDoc(doc(db, PUBLIC_REPAIRS, current.publicId), {
+        category: item.category,
+        vehicleType: item.vehicleType ?? null,
+        updatedAt: serverTimestamp(),
+      }),
+    )
   }
 
   if (item.category !== current.item?.category) {
-    await recordCategoryChange(current.item?.category, item.category, current.status)
+    writes.push(recordCategoryChange(current.item?.category, item.category, current.status))
   }
+
+  await awaitIfOnline(Promise.all(writes))
 }
 
 /** บันทึกผลคัดแยก/ประเมิน (ไม่เปลี่ยนสถานะเอง — เรียก changeRepairStatus ต่อจากหน้าฟอร์ม) */
 export async function saveAssessment(repairId, { inspectionNotes, damageLevel, causeNote, staffUid, staffName }) {
-  await updateDoc(doc(db, REPAIRS, repairId), {
-    assessment: {
-      inspectionNotes,
-      damageLevel,
-      causeNote: causeNote || null,
-      assessedByUid: staffUid,
-      assessedByName: staffName,
-      assessedAt: serverTimestamp(),
-    },
-    updatedAt: serverTimestamp(),
-  })
+  await awaitIfOnline(
+    updateDoc(doc(db, REPAIRS, repairId), {
+      assessment: {
+        inspectionNotes,
+        damageLevel,
+        causeNote: causeNote || null,
+        assessedByUid: staffUid,
+        assessedByName: staffName,
+        assessedAt: serverTimestamp(),
+      },
+      updatedAt: serverTimestamp(),
+    }),
+  )
 }
 
 /**
@@ -319,19 +345,21 @@ export async function saveQualityCheck(
   repairId,
   { technicianName, technicianNationalId, department, supervisingTeacher, repairDetails, staffUid, staffName },
 ) {
-  await updateDoc(doc(db, REPAIRS, repairId), {
-    qualityCheck: {
-      technicianName: technicianName || null,
-      technicianNationalId: technicianNationalId || null,
-      department: department || null,
-      supervisingTeacher: supervisingTeacher || null,
-      repairDetails: repairDetails || null,
-      checkedByUid: staffUid,
-      checkedByName: staffName,
-      checkedAt: serverTimestamp(),
-    },
-    updatedAt: serverTimestamp(),
-  })
+  await awaitIfOnline(
+    updateDoc(doc(db, REPAIRS, repairId), {
+      qualityCheck: {
+        technicianName: technicianName || null,
+        technicianNationalId: technicianNationalId || null,
+        department: department || null,
+        supervisingTeacher: supervisingTeacher || null,
+        repairDetails: repairDetails || null,
+        checkedByUid: staffUid,
+        checkedByName: staffName,
+        checkedAt: serverTimestamp(),
+      },
+      updatedAt: serverTimestamp(),
+    }),
+  )
 }
 
 /**
@@ -392,40 +420,42 @@ export async function changeRepairStatus(
   // unrepairable === undefined หมายถึง "ไม่แตะต้องค่าเดิม" (ใช้ตอนปิดงานที่ไม่ได้มีสวิตช์นี้ในหน้า)
   const isUnrepairable = unrepairable === undefined ? wasUnrepairable : !!unrepairable
 
-  await updateDoc(ref, {
-    status: newStatus,
-    statusLabel: statusLabel(newStatus),
-    unrepairable: isUnrepairable,
-    unrepairableReason: isUnrepairable ? (unrepairableReason ?? null) : null,
-    unrepairableNote: isUnrepairable ? (unrepairableNote ?? null) : null,
-    updatedAt: serverTimestamp(),
-  })
-
-  await addDoc(collection(db, REPAIRS, repairId, 'statusLogs'), {
-    status: newStatus,
-    statusLabel: statusLabel(newStatus),
-    note: note || null,
-    reasonNote: isUnrepairable ? (unrepairableReason ?? null) : null,
-    changedByUid: staffUid,
-    changedByName: staffName,
-    changedAt: serverTimestamp(),
-  })
-
-  // fallback ไป repairId เองสำหรับรายการเก่าก่อนมีฟิลด์ publicId (repairId เดิมเป็นสตริง
-  // สุ่มที่ไม่มีเลขบัตรประชาชนปนอยู่ จึงไม่รั่วข้อมูลถ้าใช้แทนกันชั่วคราว)
-  await updateDoc(doc(db, PUBLIC_REPAIRS, current.publicId || repairId), {
-    status: newStatus,
-    statusLabel: statusLabel(newStatus),
-    unrepairable: isUnrepairable,
-    updatedAt: serverTimestamp(),
-  })
+  const writes = [
+    updateDoc(ref, {
+      status: newStatus,
+      statusLabel: statusLabel(newStatus),
+      unrepairable: isUnrepairable,
+      unrepairableReason: isUnrepairable ? (unrepairableReason ?? null) : null,
+      unrepairableNote: isUnrepairable ? (unrepairableNote ?? null) : null,
+      updatedAt: serverTimestamp(),
+    }),
+    addDoc(collection(db, REPAIRS, repairId, 'statusLogs'), {
+      status: newStatus,
+      statusLabel: statusLabel(newStatus),
+      note: note || null,
+      reasonNote: isUnrepairable ? (unrepairableReason ?? null) : null,
+      changedByUid: staffUid,
+      changedByName: staffName,
+      changedAt: serverTimestamp(),
+    }),
+    // fallback ไป repairId เองสำหรับรายการเก่าก่อนมีฟิลด์ publicId (repairId เดิมเป็นสตริง
+    // สุ่มที่ไม่มีเลขบัตรประชาชนปนอยู่ จึงไม่รั่วข้อมูลถ้าใช้แทนกันชั่วคราว)
+    updateDoc(doc(db, PUBLIC_REPAIRS, current.publicId || repairId), {
+      status: newStatus,
+      statusLabel: statusLabel(newStatus),
+      unrepairable: isUnrepairable,
+      updatedAt: serverTimestamp(),
+    }),
+  ]
 
   if (oldStatus !== newStatus) {
-    await recordStatusChange(current.item?.category, oldStatus, newStatus)
+    writes.push(recordStatusChange(current.item?.category, oldStatus, newStatus))
   }
   if (isUnrepairable !== wasUnrepairable) {
-    await recordUnrepairableChange(isUnrepairable ? 1 : -1)
+    writes.push(recordUnrepairableChange(isUnrepairable ? 1 : -1))
   }
+
+  await awaitIfOnline(Promise.all(writes))
 }
 
 /** ปิดงาน/ส่งมอบคืน — บันทึกรูป+ผู้รับคืน แล้วเปลี่ยนสถานะเป็น "ส่งมอบ/ส่งคืนแล้ว" (10) */
@@ -436,19 +466,21 @@ export async function closeRepair(repairId, { itemPhoto, personPhoto, receiverNa
   if (!itemPhoto) pendingAdditions.push('closure:item')
   if (!personPhoto) pendingAdditions.push('closure:person')
 
-  await updateDoc(doc(db, REPAIRS, repairId), {
-    closure: {
-      itemPhoto: itemPhoto ?? null,
-      personPhoto: personPhoto ?? null,
-      receiverName,
-      receiverRelation: receiverRelation || null,
-      closedByUid: staffUid,
-      closedByName: staffName,
-      closedAt: serverTimestamp(),
-    },
-    ...(pendingAdditions.length > 0 ? { pendingPhotos: arrayUnion(...pendingAdditions) } : {}),
-    updatedAt: serverTimestamp(),
-  })
+  await awaitIfOnline(
+    updateDoc(doc(db, REPAIRS, repairId), {
+      closure: {
+        itemPhoto: itemPhoto ?? null,
+        personPhoto: personPhoto ?? null,
+        receiverName,
+        receiverRelation: receiverRelation || null,
+        closedByUid: staffUid,
+        closedByName: staffName,
+        closedAt: serverTimestamp(),
+      },
+      ...(pendingAdditions.length > 0 ? { pendingPhotos: arrayUnion(...pendingAdditions) } : {}),
+      updatedAt: serverTimestamp(),
+    }),
+  )
   await changeRepairStatus(repairId, {
     newStatus: 10,
     note: 'ปิดงาน/ส่งมอบคืนเรียบร้อย',
