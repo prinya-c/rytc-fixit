@@ -1,5 +1,6 @@
 import { Link, NavLink } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { FIXIT_LOGO } from '../lib/assets'
 
 const navLinkClass = ({ isActive }) =>
   `px-3 py-1.5 rounded-md text-sm font-medium ${
@@ -13,9 +14,7 @@ export default function Navbar() {
     <header className="no-print bg-primary">
       <div className="max-w-6xl mx-auto px-4 py-2 flex flex-wrap items-center justify-between gap-2">
         <Link to="/" className="flex items-center gap-2 font-semibold text-white">
-          <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-white text-primary font-bold">
-            F
-          </span>
+          <img src={FIXIT_LOGO} alt="Fix it Center" className="h-9 w-9 object-contain" />
           <span className="leading-tight">
             RYTC-Fix
             <span className="block text-xs font-normal text-white/80">

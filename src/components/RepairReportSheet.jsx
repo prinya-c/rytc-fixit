@@ -1,3 +1,4 @@
+import { FIXIT_LOGO, RYTC_LOGO } from '../lib/assets'
 import { ITEM_CATEGORIES, OTHER_VALUE, VEHICLE_TYPES } from '../lib/options'
 
 const CENTER_NAME = 'วิทยาลัยเทคนิคระยอง'
@@ -69,9 +70,13 @@ export default function RepairReportSheet({ repair, logs }) {
 
   return (
     <div className="p-[15mm] text-[13px] leading-snug text-slate-900">
-      <div className="text-center mb-3">
-        <p className="text-lg font-bold">ใบรับงานซ่อม (Repair Form)</p>
-        <p className="text-sm">ศูนย์ซ่อมสร้างเพื่อชุมชน (Fix it Center)</p>
+      <div className="flex items-center justify-between mb-3">
+        <img src={RYTC_LOGO} alt="Rayong Technical College" className="h-10 object-contain" />
+        <div className="text-center">
+          <p className="text-lg font-bold">ใบรับงานซ่อม (Repair Form)</p>
+          <p className="text-sm">ศูนย์ซ่อมสร้างเพื่อชุมชน (Fix it Center)</p>
+        </div>
+        <img src={FIXIT_LOGO} alt="Fix it Center" className="h-16 w-16 object-contain" />
       </div>
 
       <div className="flex justify-between mb-2">

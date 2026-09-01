@@ -12,7 +12,7 @@ export default defineConfig({
       // กดยืนยันเองก่อนสลับไปใช้ไฟล์ชุดใหม่ (ดู src/components/PwaUpdatePrompt.jsx) — กันไม่ให้
       // สลับเวอร์ชันกลางคันตอนกำลังกรอกฟอร์มอยู่โดยไม่รู้ตัว
       registerType: 'prompt',
-      includeAssets: ['favicon.svg'],
+      includeAssets: ['favicon.svg', 'fixit-logo.png', 'rytc-logo01.png'],
       manifest: {
         name: 'RYTC-Fix | ศูนย์ซ่อมสร้างเพื่อชุมชน',
         short_name: 'RYTC-Fix',

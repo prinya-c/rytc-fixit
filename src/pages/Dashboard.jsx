@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import PhotoOrPending from '../components/PhotoOrPending'
 import StatusBadge from '../components/StatusBadge'
 import { useAuth } from '../context/AuthContext'
+import { FIXIT_LOGO } from '../lib/assets'
 import { STATUSES, ITEM_CATEGORIES, VEHICLE_TYPES } from '../lib/options'
 import { backfillPublicRepairs, subscribePublicRepairs } from '../lib/repairs'
 import { subscribeStats } from '../lib/stats'
@@ -142,13 +143,16 @@ export default function Dashboard() {
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8 space-y-8">
-      <section className="bg-white rounded-2xl shadow-sm border border-orange-100 p-6">
-        <h1 className="text-2xl font-bold text-primary">RYTC-Fix</h1>
-        <p className="text-slate-600 mt-1">
-          ระบบติดตามงานซ่อม โครงการ <strong>อาชีวะอาสา! ศูนย์ซ่อมสร้างเพื่อชุมชน (Fix it Center)</strong>{' '}
-          วิทยาลัยเทคนิคระยอง — ให้บริการซ่อมเครื่องมือ เครื่องใช้ไฟฟ้า เครื่องจักรกลการเกษตร
-          และยานพาหนะแก่ประชาชนโดยไม่คิดค่าใช้จ่าย พร้อมถ่ายทอดความรู้การดูแลรักษาเบื้องต้น
-        </p>
+      <section className="bg-white rounded-2xl shadow-sm border border-orange-100 p-6 flex items-start gap-4">
+        <img src={FIXIT_LOGO} alt="Fix it Center" className="h-16 w-16 object-contain shrink-0" />
+        <div>
+          <h1 className="text-2xl font-bold text-primary">RYTC-Fix</h1>
+          <p className="text-slate-600 mt-1">
+            ระบบติดตามงานซ่อม โครงการ <strong>อาชีวะอาสา! ศูนย์ซ่อมสร้างเพื่อชุมชน (Fix it Center)</strong>{' '}
+            วิทยาลัยเทคนิคระยอง — ให้บริการซ่อมเครื่องมือ เครื่องใช้ไฟฟ้า เครื่องจักรกลการเกษตร
+            และยานพาหนะแก่ประชาชนโดยไม่คิดค่าใช้จ่าย พร้อมถ่ายทอดความรู้การดูแลรักษาเบื้องต้น
+          </p>
+        </div>
       </section>
 
       <div className="flex flex-wrap items-center justify-between gap-2">

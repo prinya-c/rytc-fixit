@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { FIXIT_LOGO, RYTC_LOGO } from '../lib/assets'
 
 export default function Login() {
   const { user, login } = useAuth()
@@ -30,12 +31,11 @@ export default function Login() {
   return (
     <div className="min-h-screen flex items-center justify-center px-4">
       <div className="bg-white rounded-xl shadow-md p-6 w-full max-w-sm space-y-4 text-center">
-        <span className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-primary text-white text-xl font-bold">
-          F
-        </span>
+        <img src={FIXIT_LOGO} alt="Fix it Center" className="h-16 w-16 object-contain mx-auto" />
         <div>
           <h1 className="text-lg font-semibold text-slate-800">เข้าสู่ระบบเจ้าหน้าที่</h1>
           <p className="text-sm text-slate-500">RYTC-Fix ศูนย์ซ่อมสร้างเพื่อชุมชน</p>
+          <img src={RYTC_LOGO} alt="Rayong Technical College" className="h-6 object-contain mx-auto mt-2" />
         </div>
         {error && (
           <p className="text-sm text-danger bg-red-50 border border-red-200 rounded-md px-3 py-2 text-left">
