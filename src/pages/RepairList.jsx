@@ -49,17 +49,19 @@ export default function RepairList() {
         </Link>
       </div>
 
-      <div className="flex flex-wrap gap-3">
+      {/* จอมือถือ: เรียงเต็มความกว้างเท่ากันทุกช่องเป็นคอลัมน์เดียว (flex-col) กันปัญหา select
+          กว้างไม่เท่ากันตามความยาวข้อความ — จอ sm ขึ้นไปกลับไปเป็นแถวเดียวแบบเดิม (sm:flex-row) */}
+      <div className="flex flex-col sm:flex-row sm:flex-wrap gap-3">
         <input
           placeholder="ค้นหาชื่อ/เบอร์โทร/เลขบัตรประชาชน"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="flex-1 min-w-[220px] rounded-md border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+          className="w-full sm:flex-1 sm:min-w-[220px] rounded-md border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
         />
         <select
           value={categoryFilter}
           onChange={(e) => setCategoryFilter(e.target.value)}
-          className="rounded-md border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+          className="w-full sm:w-auto rounded-md border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
         >
           <option value="">ทุกประเภท</option>
           {ITEM_CATEGORIES.map((c) => (
@@ -71,7 +73,7 @@ export default function RepairList() {
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
-          className="rounded-md border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+          className="w-full sm:w-auto rounded-md border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
         >
           <option value="">ทุกสถานะ</option>
           {STATUSES.map((s) => (
@@ -88,7 +90,7 @@ export default function RepairList() {
               setStatusFilter('')
               setCategoryFilter('')
             }}
-            className="rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-500 hover:bg-slate-50"
+            className="w-full sm:w-auto rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-500 hover:bg-slate-50"
           >
             ล้างตัวกรอง
           </button>
