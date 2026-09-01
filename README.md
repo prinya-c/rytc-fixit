@@ -50,7 +50,17 @@
 ```
 staff/{uid}                          // doc id = Firebase Auth uid, สร้างอัตโนมัติตอน login ครั้งแรก
   fullName, phone, email: string
+  position: string             // doc id จาก collection position (denormalize positionName ไว้ด้วย)
+  positionName: string
+  dept: string                 // doc id จาก collection dept (denormalize deptName ไว้ด้วย)
+  deptName: string
   createdAt: timestamp
+
+dept/{id}                            // ข้อมูลอ้างอิงคงที่ แอดมินเพิ่ม/แก้ผ่าน Firebase Console
+  "dept-name": string                // เท่านั้น (อ่านอย่างเดียวจากแอป — ดู src/lib/lookups.js)
+
+position/{id}                        // เช่นเดียวกับ dept — doc id เป็นรหัสตำแหน่ง เช่น "1001"
+  "staff-position": string
 
 repairs/{repairId}                   // doc id = "{เลขบัตรประชาชนผู้ขอรับบริการ}-dd-mm-yyyy-HH-mm-ss"
                                       // (เวลาเครื่อง ณ ตอนกดบันทึก) ดู buildRepairId() ใน repairs.js

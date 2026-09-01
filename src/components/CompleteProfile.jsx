@@ -1,23 +1,45 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useAuth } from '../context/AuthContext'
+import { listDepts, listPositions } from '../lib/lookups'
+
+const selectClass =
+  'w-full rounded-md border border-slate-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary'
 
 export default function CompleteProfile() {
   const { user, completeProfile, logout } = useAuth()
   const [fullName, setFullName] = useState('')
   const [phone, setPhone] = useState('')
+  const [positionId, setPositionId] = useState('')
+  const [deptId, setDeptId] = useState('')
+  const [positions, setPositions] = useState([])
+  const [depts, setDepts] = useState([])
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
+
+  useEffect(() => {
+    listPositions().then(setPositions).catch(() => setError('โหลดรายการตำแหน่งไม่สำเร็จ'))
+    listDepts().then(setDepts).catch(() => setError('โหลดรายการสาขาวิชาไม่สำเร็จ'))
+  }, [])
 
   async function handleSubmit(e) {
     e.preventDefault()
     setError('')
-    if (!fullName.trim() || !phone.trim()) {
-      setError('กรุณากรอกชื่อ-นามสกุล และเบอร์โทรศัพท์ให้ครบ')
+    if (!fullName.trim() || !phone.trim() || !positionId || !deptId) {
+      setError('กรุณากรอกข้อมูลให้ครบทุกช่อง')
       return
     }
     setSaving(true)
     try {
-      await completeProfile({ fullName, phone })
+      const position = positions.find((p) => p.id === positionId)
+      const dept = depts.find((d) => d.id === deptId)
+      await completeProfile({
+        fullName,
+        phone,
+        position: positionId,
+        positionName: position?.name ?? '',
+        dept: deptId,
+        deptName: dept?.name ?? '',
+      })
     } catch (err) {
       setError(err.message)
     } finally {
@@ -34,7 +56,7 @@ export default function CompleteProfile() {
         <div>
           <h1 className="text-lg font-semibold text-slate-800">ตั้งค่าโปรไฟล์เจ้าหน้าที่</h1>
           <p className="text-sm text-slate-500 mt-1">
-            เข้าสู่ระบบด้วย {user?.email} ครั้งแรก กรุณากรอกชื่อ-เบอร์โทรของคุณ
+            เข้าสู่ระบบด้วย {user?.email} ครั้งแรก กรุณากรอกข้อมูลของคุณ
           </p>
         </div>
         {error && (
@@ -59,6 +81,28 @@ export default function CompleteProfile() {
             onChange={(e) => setPhone(e.target.value)}
             className="w-full rounded-md border border-slate-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
           />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-slate-700 mb-1">ตำแหน่ง</label>
+          <select value={positionId} onChange={(e) => setPositionId(e.target.value)} className={selectClass}>
+            <option value="">เลือกตำแหน่ง</option>
+            {positions.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.name}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-slate-700 mb-1">สาขาวิชา</label>
+          <select value={deptId} onChange={(e) => setDeptId(e.target.value)} className={selectClass}>
+            <option value="">เลือกสาขาวิชา</option>
+            {depts.map((d) => (
+              <option key={d.id} value={d.id}>
+                {d.name}
+              </option>
+            ))}
+          </select>
         </div>
         <div className="flex gap-2">
           <button

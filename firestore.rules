@@ -45,5 +45,15 @@ service cloud.firestore {
       allow read: if true;
       allow write: if isStaff();
     }
+
+    // dept/position เป็นข้อมูลอ้างอิงคงที่ (สาขาวิชา/ตำแหน่ง) ที่แอดมินเพิ่ม/แก้ผ่าน Firebase
+    // Console เท่านั้น — แอปนี้อ่านอย่างเดียวตอนกรอกโปรไฟล์เจ้าหน้าที่ครั้งแรก จึงไม่เปิด write
+    match /dept/{deptId} {
+      allow read: if isStaff();
+    }
+
+    match /position/{positionId} {
+      allow read: if isStaff();
+    }
   }
 }

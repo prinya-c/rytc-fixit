@@ -56,12 +56,18 @@ export function AuthProvider({ children }) {
     await signOut(auth)
   }
 
-  /** เจ้าหน้าที่กรอกชื่อ-เบอร์โทรครั้งแรกหลังล็อกอิน (บัญชี Auth สร้างผ่าน Console แล้วแต่ยังไม่มี profile) */
-  async function completeProfile({ fullName, phone }) {
+  /** เจ้าหน้าที่กรอกชื่อ-เบอร์โทร-ตำแหน่ง-สาขาวิชาครั้งแรกหลังล็อกอิน (บัญชี Auth สร้างผ่าน Console
+   * แล้วแต่ยังไม่มี profile) — position/dept เก็บทั้ง id (อ้างอิงกลับไป collection ต้นทาง) และ
+   * ชื่อที่ denormalize ไว้แสดงผลเร็วโดยไม่ต้อง join เพิ่ม (รูปแบบเดียวกับ statusLabel ใน repairs.js) */
+  async function completeProfile({ fullName, phone, position, positionName, dept, deptName }) {
     if (!user) throw new Error('ยังไม่ได้เข้าสู่ระบบ')
     const profile = {
       fullName: fullName.trim(),
       phone: phone.trim(),
+      position,
+      positionName,
+      dept,
+      deptName,
       email: user.email,
       createdAt: serverTimestamp(),
     }
