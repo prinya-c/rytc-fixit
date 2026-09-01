@@ -3,17 +3,24 @@ import { Link, useParams } from 'react-router-dom'
 import PhotoOrPending from '../components/PhotoOrPending'
 import StatusBadge from '../components/StatusBadge'
 import { subscribePublicRepairByRepairId } from '../lib/repairs'
+import { VEHICLE_TYPES } from '../lib/options'
 
 function formatDate(ts) {
   if (!ts?.toDate) return '-'
   return ts.toDate().toLocaleString('th-TH', { dateStyle: 'medium', timeStyle: 'short' })
 }
 
+function vehicleTypeLabel(repair) {
+  return VEHICLE_TYPES.find((v) => v.value === repair.vehicleType)?.label
+}
+
 /**
  * แสดงเมื่อคนที่ยังไม่ได้ล็อกอินสแกน QR อันบนของใบลงทะเบียน (ลิงก์เดียวกับที่เจ้าหน้าที่ใช้ —
  * ดู RepairDetailGate.jsx) — โชว์ชื่อสิ่งของ/ยี่ห้อ-รุ่น/ชื่อผู้ขอรับบริการ/สถานะงานซ่อม ไม่มีเบอร์
  * โทร/เลขบัตรประชาชน/รูปคน อ่านจาก publicRepairs เท่านั้น (ดู subscribePublicRepairByRepairId
- * ใน repairs.js) ไม่แสดงประเภทสิ่งของ (category) เพราะชื่อสิ่งของสื่อความได้ตรงกว่าอยู่แล้ว
+ * ใน repairs.js) ไม่แสดงประเภทสิ่งของ (category) เพราะชื่อสิ่งของสื่อความได้ตรงกว่าอยู่แล้ว — ยกเว้น
+ * ยานพาหนะที่ไม่มีชื่อสิ่งของให้กรอก (ดู RepairForm.jsx) จึงโชว์ชนิดยานพาหนะ (จักรยาน/จักรยานยนต์/
+ * รถยนต์) แทน ก่อนบรรทัดยี่ห้อ/รุ่น
  */
 export default function RepairPublicStatus() {
   const { id } = useParams()
@@ -30,6 +37,9 @@ export default function RepairPublicStatus() {
 
       <div className="bg-white rounded-xl shadow-sm border border-orange-100 p-5 space-y-3">
         {repair.itemName && <p className="font-semibold text-slate-800 text-lg">{repair.itemName}</p>}
+        {repair.category === 'vehicle' && vehicleTypeLabel(repair) && (
+          <p className="font-semibold text-slate-800 text-lg">{vehicleTypeLabel(repair)}</p>
+        )}
         {(repair.brand || repair.model) && (
           <p className="text-sm text-slate-500">
             {repair.brand && `ยี่ห้อ ${repair.brand}`}
