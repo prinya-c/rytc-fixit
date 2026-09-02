@@ -102,6 +102,8 @@ export default function RepairReportSheet({ repair, logs }) {
           <p>ที่อยู่: {formatAddress(repair.requester ?? {})}</p>
           <p>โทรศัพท์: {repair.requester?.phone}</p>
           <p>สิ่งของที่นำมาซ่อม: {itemDescription(repair.item)}</p>
+          {repair.item?.brand && <p>ยี่ห้อ: {repair.item.brand}</p>}
+          {repair.item?.model && <p>รุ่น: {repair.item.model}</p>}
           <p className="font-semibold mt-1">ประเภทเครื่องใช้ที่ซ่อม</p>
           <div className="flex flex-wrap gap-x-5 gap-y-1">
             {ITEM_CATEGORIES.map((c) => (
