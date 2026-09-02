@@ -27,20 +27,21 @@ export default function PrintTicket({ repair, qrDataUrl, contactQrDataUrl }) {
           <p className="font-bold text-base text-primary leading-tight">FixIT Center</p>
           <p className="text-xs text-slate-500 mt-1">ศูนย์ซ่อมสร้างเพื่อชุมชน อาชีวศึกษาจังหวัดระยอง</p>
         </div>
-        <div className="flex items-start gap-2 shrink-0">
-          {/* ช่องว่างให้เจ้าหน้าที่เขียนเลขคิวเองด้วยปากกาหน้างาน ไม่ใช่เลขที่ระบบรันให้ */}
-          <div className="flex flex-col items-center justify-center h-24 w-16 border-2 border-primary rounded-md shrink-0">
-            <p className="text-[10px] leading-none text-slate-500 mt-1.5">คิวที่</p>
-          </div>
-          <img src={qrDataUrl} alt="QR" className="h-24 w-24 shrink-0" />
-        </div>
+        <img src={qrDataUrl} alt="QR" className="h-24 w-24 shrink-0" />
       </div>
 
-      <div>
-        <p className="font-semibold text-base mb-0.5">ผู้ขอรับบริการ</p>
-        <p>ชื่อ-นามสกุล: {repair.requester.fullName}</p>
-        <p>เลขบัตรประชาชน: {repair.requester.nationalId}</p>
-        <p>โทรศัพท์: {repair.requester.phone}</p>
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="font-semibold text-base mb-0.5">ผู้ขอรับบริการ</p>
+          <p>ชื่อ-นามสกุล: {repair.requester.fullName}</p>
+          <p>เลขบัตรประชาชน: {repair.requester.nationalId}</p>
+          <p>โทรศัพท์: {repair.requester.phone}</p>
+        </div>
+        {/* ช่องว่างให้เจ้าหน้าที่เขียนเลขคิวเองด้วยปากกาหน้างาน ไม่ใช่เลขที่ระบบรันให้ — วางแนวเดียวกับ
+            QR ด้านบน (คอลัมน์ขวา) ในที่ว่างท้ายข้อมูลผู้รับบริการ */}
+        <div className="flex flex-col items-center justify-center h-24 w-16 border-2 border-primary rounded-md shrink-0">
+          <p className="text-[10px] leading-none text-slate-500 mt-1.5">คิวที่</p>
+        </div>
       </div>
 
       <div>
