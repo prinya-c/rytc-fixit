@@ -18,6 +18,9 @@ function supportsWebPEncoding() {
 }
 
 const CAN_ENCODE_WEBP = supportsWebPEncoding()
+// เผื่อต้องตรวจสอบย้อนหลังว่าทำไมรูปที่อัปโหลดจากเครื่องไหนไม่เป็น WebP — เปิด console ของเบราว์เซอร์
+// เครื่องนั้นดูข้อความนี้ได้ (ไม่รองรับ WebP เป็นเรื่องปกติของบางเบราว์เซอร์/WebView ในแอปแชท ไม่ใช่บั๊ก)
+console.info(`[fixit] เข้ารหัสรูปเป็น WebP ได้: ${CAN_ENCODE_WEBP} (ไม่ได้จะใช้ JPEG แทน)`)
 
 // เป้าหมาย 250KB/รูป — ใช้ WebP ก่อนเสมอถ้าเบราว์เซอร์เข้ารหัสได้ (เล็กกว่า JPEG ที่คุณภาพเท่ากัน
 // ~25-35%) ไม่รองรับค่อยตกไปใช้ JPEG แทน — maxWidthOrHeight ลดจาก 1600 เหลือ 1280 ด้วย เพราะถ้า
@@ -37,8 +40,15 @@ const COMPRESSION_OPTIONS = {
  */
 export async function compressPhoto(file) {
   try {
-    return await imageCompression(file, COMPRESSION_OPTIONS)
-  } catch {
+    const compressed = await imageCompression(file, COMPRESSION_OPTIONS)
+    console.info(
+      `[fixit] บีบอัดรูปสำเร็จ: ${file.type} ${(file.size / 1024).toFixed(0)}KB → ${compressed.type} ${(compressed.size / 1024).toFixed(0)}KB`,
+    )
+    return compressed
+  } catch (err) {
+    // บีบอัดไม่สำเร็จ — ใช้ไฟล์ต้นฉบับแทน (มักเป็น JPEG/HEIC เต็มขนาดจากกล้อง ไม่ใช่ WebP) log ไว้
+    // เพื่อตรวจสอบย้อนหลังได้ว่าทำไมรูปจากเครื่องนี้ไม่ถูกบีบอัด/แปลงเป็น WebP ตามที่ตั้งใจไว้
+    console.warn('[fixit] บีบอัดรูปไม่สำเร็จ ใช้ไฟล์ต้นฉบับแทน:', err)
     return file
   }
 }
