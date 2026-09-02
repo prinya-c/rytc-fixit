@@ -129,8 +129,8 @@ repairs/{repairId}                   // doc id = "{เลขบัตรปร�
   unrepairable: boolean
   unrepairableReason?, unrepairableNote?: string
   assessment?: { inspectionNotes, damageLevel, causeNote?, assessedByUid, assessedByName, assessedAt }
-  qualityCheck?: { technicianId?, technicianName, technicianNationalId?, department?,
-                    supervisingTeacher?, repairDetails?, checkedByUid, checkedByName, checkedAt }
+  qualityCheck?: { technicianId?, technicianName, technicianNationalId?, position?, department?,
+                    repairDetails?, checkedByUid, checkedByName, checkedAt }
                  // กรอกตอนอัปเดตสถานะเป็น "ตรวจสอบคุณภาพ" (7) — ใช้พิมพ์ใบรายงานซ่อม
                  // technicianId อ้างอิง technicians/{id} ถ้าเลือกจากทะเบียน (ดู /technicians)
                  // technicianName/department denormalize ไว้เสมอไม่ว่าจะเลือกจากทะเบียนหรือพิมพ์เอง

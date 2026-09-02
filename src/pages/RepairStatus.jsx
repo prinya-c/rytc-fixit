@@ -54,7 +54,7 @@ export default function RepairStatus() {
   const [technicianName, setTechnicianName] = useState('')
   const [technicianNationalId, setTechnicianNationalId] = useState('')
   const [department, setDepartment] = useState('')
-  const [supervisingTeacher, setSupervisingTeacher] = useState('')
+  const [position, setPosition] = useState('')
   const [repairDetails, setRepairDetails] = useState('')
   const [technicians, setTechnicians] = useState([])
 
@@ -92,13 +92,14 @@ export default function RepairStatus() {
     }
   }
 
-  /** เลือกช่างซ่อมจากรายชื่อที่จัดการไว้ที่ /technicians — เติมชื่อ/สาขาวิชา/เลขบัตรประชาชน (ถ้ามี)
-   * ให้อัตโนมัติ (ยังแก้ไขเป็นข้อความเองต่อได้ตามปกติ เผื่อกรณีคนที่ซ่อมจริงยังไม่มีในทะเบียน) */
+  /** เลือกช่างซ่อมจากรายชื่อที่จัดการไว้ที่ /technicians — เติมชื่อ/ตำแหน่ง/สาขาวิชา/เลขบัตรประชาชน
+   * (ถ้ามี) ให้อัตโนมัติ (ยังแก้ไขเป็นข้อความเองต่อได้ตามปกติ เผื่อกรณีคนที่ซ่อมจริงยังไม่มีในทะเบียน) */
   function handleTechnicianSelect(techId) {
     setTechnicianId(techId)
     const tech = technicians.find((t) => t.id === techId)
     if (tech) {
       setTechnicianName(tech.fullName)
+      setPosition(tech.positionName)
       setDepartment(tech.deptName)
       if (tech.nationalId) setTechnicianNationalId(tech.nationalId)
     }
@@ -114,8 +115,8 @@ export default function RepairStatus() {
           technicianId: technicianId || null,
           technicianName,
           technicianNationalId,
+          position,
           department,
-          supervisingTeacher,
           repairDetails,
           staffUid: user.uid,
           staffName: staffProfile.fullName,
@@ -247,19 +248,20 @@ export default function RepairStatus() {
                   />
                 </div>
                 <div>
+                  <label className="block text-xs font-medium text-slate-600 mb-1">ตำแหน่ง</label>
+                  <input
+                    placeholder="เช่น นักเรียน, นักศึกษา"
+                    value={position}
+                    onChange={(e) => setPosition(e.target.value)}
+                    className={inputClass}
+                  />
+                </div>
+                <div>
                   <label className="block text-xs font-medium text-slate-600 mb-1">สาขาวิชา</label>
                   <input
                     placeholder="เช่น ช่างยนต์, ช่างไฟฟ้า"
                     value={department}
                     onChange={(e) => setDepartment(e.target.value)}
-                    className={inputClass}
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-slate-600 mb-1">ครูสาขาวิชา</label>
-                  <input
-                    value={supervisingTeacher}
-                    onChange={(e) => setSupervisingTeacher(e.target.value)}
                     className={inputClass}
                   />
                 </div>

@@ -361,20 +361,12 @@ export async function saveAssessment(repairId, { inspectionNotes, damageLevel, c
  * เก็บแยกต่างหากจาก staff/{uid} เพราะเป็นข้อมูลเฉพาะรายการนี้ (ช่างที่ลงมือซ่อมจริง
  * อาจไม่ใช่คนเดียวกับที่ล็อกอินกดปุ่มอัปเดตสถานะ) ไม่ใช่ข้อมูลโปรไฟล์ถาวรของเจ้าหน้าที่ —
  * technicianId อ้างอิงกลับไป technicians/{id} (ถ้าเลือกจากทะเบียน ดู technicians.js) ส่วน
- * technicianName/department เป็นค่าที่ denormalize ไว้แสดงผล/พิมพ์ใบรายงานได้เร็วโดยไม่ต้อง join
+ * technicianName/position/department เป็นค่าที่ denormalize ไว้แสดงผล/พิมพ์ใบรายงานได้เร็ว
+ * โดยไม่ต้อง join
  */
 export async function saveQualityCheck(
   repairId,
-  {
-    technicianId,
-    technicianName,
-    technicianNationalId,
-    department,
-    supervisingTeacher,
-    repairDetails,
-    staffUid,
-    staffName,
-  },
+  { technicianId, technicianName, technicianNationalId, position, department, repairDetails, staffUid, staffName },
 ) {
   await awaitIfOnline(
     updateDoc(doc(db, REPAIRS, repairId), {
@@ -382,8 +374,8 @@ export async function saveQualityCheck(
         technicianId: technicianId || null,
         technicianName: technicianName || null,
         technicianNationalId: technicianNationalId || null,
+        position: position || null,
         department: department || null,
-        supervisingTeacher: supervisingTeacher || null,
         repairDetails: repairDetails || null,
         checkedByUid: staffUid,
         checkedByName: staffName,

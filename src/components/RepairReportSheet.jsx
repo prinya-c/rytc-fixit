@@ -169,9 +169,9 @@ export default function RepairReportSheet({ repair, logs }) {
         <div className="p-2 space-y-1">
           <p className="font-semibold">ผู้ดำเนินการซ่อม/ตรวจเช็ค</p>
           <p>ชื่อ-สกุล: {repair.qualityCheck?.technicianName || '-'}</p>
-          <p>บัตรประจำตัวประชาชนเลขที่: {repair.qualityCheck?.technicianNationalId || '-'}</p>
+          <p>ตำแหน่ง: {repair.qualityCheck?.position || '-'}</p>
           <p>สาขาวิชา: {repair.qualityCheck?.department || '-'}</p>
-          <p>ครูสาขาวิชา: {repair.qualityCheck?.supervisingTeacher || '-'}</p>
+          <p>บัตรประจำตัวประชาชนเลขที่: {repair.qualityCheck?.technicianNationalId || '-'}</p>
         </div>
       </div>
 
