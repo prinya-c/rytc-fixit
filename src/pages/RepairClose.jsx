@@ -69,9 +69,25 @@ export default function RepairClose() {
     setError('')
     setSubmitting(true)
     try {
+      // path มี timestamp ต่อท้ายเสมอ (ไม่ใช่ path ตายตัวแบบเดิม) — ถ้าปิดงานซ้ำหลังกด "ยกเลิก
+      // ปิดงาน/ส่งมอบ" รูปใหม่จะได้ URL คนละตัวกับรอบก่อน กัน CacheFirst runtime caching ของรูป
+      // Storage (ดู vite.config.js) เสิร์ฟรูปเก่าที่แคชไว้แทนรูปใหม่ที่เพิ่งอัปโหลดทับ path เดิม
+      const closeBatch = Date.now()
       const [itemPhotoUrl, personPhotoUrl] = await Promise.all([
-        uploadOrQueuePhoto({ repairId: id, kind: 'closure', slot: 'item', subPath: 'closure/item.jpg', file: itemPhoto }),
-        uploadOrQueuePhoto({ repairId: id, kind: 'closure', slot: 'person', subPath: 'closure/person.jpg', file: personPhoto }),
+        uploadOrQueuePhoto({
+          repairId: id,
+          kind: 'closure',
+          slot: 'item',
+          subPath: `closure/item-${closeBatch}.jpg`,
+          file: itemPhoto,
+        }),
+        uploadOrQueuePhoto({
+          repairId: id,
+          kind: 'closure',
+          slot: 'person',
+          subPath: `closure/person-${closeBatch}.jpg`,
+          file: personPhoto,
+        }),
       ])
       await closeRepair(id, {
         itemPhoto: itemPhotoUrl,
