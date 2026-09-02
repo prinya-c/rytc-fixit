@@ -27,7 +27,13 @@ export default function PrintTicket({ repair, qrDataUrl, contactQrDataUrl }) {
           <p className="font-bold text-base text-primary leading-tight">FixIT Center</p>
           <p className="text-xs text-slate-500 mt-1">ศูนย์ซ่อมสร้างเพื่อชุมชน อาชีวศึกษาจังหวัดระยอง</p>
         </div>
-        <img src={qrDataUrl} alt="QR" className="h-24 w-24 shrink-0" />
+        <div className="flex items-start gap-2 shrink-0">
+          {/* ช่องว่างให้เจ้าหน้าที่เขียนเลขคิวเองด้วยปากกาหน้างาน ไม่ใช่เลขที่ระบบรันให้ */}
+          <div className="flex flex-col items-center justify-center h-24 w-16 border-2 border-primary rounded-md shrink-0">
+            <p className="text-[10px] leading-none text-slate-500 mt-1.5">คิวที่</p>
+          </div>
+          <img src={qrDataUrl} alt="QR" className="h-24 w-24 shrink-0" />
+        </div>
       </div>
 
       <div>
