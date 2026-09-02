@@ -113,26 +113,13 @@ export default function RepairReportSheet({ repair, logs }) {
             ))}
           </div>
         </div>
-        <div className="p-2 flex flex-col items-center justify-center gap-1">
+        <div className="p-2 flex items-center justify-center">
           {repair.photosIntake?.itemPhotos?.[0] && (
-            <div className="text-center">
-              <img
-                src={repair.photosIntake.itemPhotos[0]}
-                alt="รูปบัตรประชาชน"
-                className="max-w-full max-h-[26mm] object-contain"
-              />
-              <p className="text-[10px] text-slate-500">รูปบัตรประชาชน</p>
-            </div>
-          )}
-          {repair.photosIntake?.personPhoto && (
-            <div className="text-center">
-              <img
-                src={repair.photosIntake.personPhoto}
-                alt="รูปตอนรับลงทะเบียน"
-                className="max-w-full max-h-[26mm] object-contain"
-              />
-              <p className="text-[10px] text-slate-500">รูปตอนรับลงทะเบียน</p>
-            </div>
+            <img
+              src={repair.photosIntake.itemPhotos[0]}
+              alt="รูปบัตรประชาชน"
+              className="max-w-full max-h-[55mm] object-contain"
+            />
           )}
         </div>
       </div>
