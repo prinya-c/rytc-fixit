@@ -223,43 +223,48 @@ export default function RepairStatus() {
                 </p>
               )}
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <label className="block text-xs font-medium text-slate-600 mb-1">ชื่อ-นามสกุล</label>
-                <input
-                  value={technicianName}
-                  onChange={(e) => setTechnicianName(e.target.value)}
-                  className={inputClass}
-                />
+            {/* ซ่อนฟิลด์เหล่านี้เมื่อเลือกช่างซ่อมจากทะเบียนแล้ว (ชื่อ/สาขาวิชาก็เห็นอยู่แล้วใน
+                ดรอปดาวน์ด้านบน) แสดงเฉพาะตอนยังไม่ได้เลือก ให้กรอกเองได้เผื่อคนที่ซ่อมจริงยังไม่มี
+                ในทะเบียน — ค่าที่เติมไว้แล้วจากการเลือกยังถูกบันทึกไปด้วยตามปกติแม้ไม่แสดงในฟอร์ม */}
+            {!technicianId && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-medium text-slate-600 mb-1">ชื่อ-นามสกุล</label>
+                  <input
+                    value={technicianName}
+                    onChange={(e) => setTechnicianName(e.target.value)}
+                    className={inputClass}
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-slate-600 mb-1">เลขบัตรประชาชน</label>
+                  <input
+                    value={technicianNationalId}
+                    onChange={(e) => setTechnicianNationalId(e.target.value.replace(/\D/g, ''))}
+                    inputMode="numeric"
+                    maxLength={13}
+                    className={inputClass}
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-slate-600 mb-1">สาขาวิชา</label>
+                  <input
+                    placeholder="เช่น ช่างยนต์, ช่างไฟฟ้า"
+                    value={department}
+                    onChange={(e) => setDepartment(e.target.value)}
+                    className={inputClass}
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-slate-600 mb-1">ครูสาขาวิชา</label>
+                  <input
+                    value={supervisingTeacher}
+                    onChange={(e) => setSupervisingTeacher(e.target.value)}
+                    className={inputClass}
+                  />
+                </div>
               </div>
-              <div>
-                <label className="block text-xs font-medium text-slate-600 mb-1">เลขบัตรประชาชน</label>
-                <input
-                  value={technicianNationalId}
-                  onChange={(e) => setTechnicianNationalId(e.target.value.replace(/\D/g, ''))}
-                  inputMode="numeric"
-                  maxLength={13}
-                  className={inputClass}
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-slate-600 mb-1">สาขาวิชา</label>
-                <input
-                  placeholder="เช่น ช่างยนต์, ช่างไฟฟ้า"
-                  value={department}
-                  onChange={(e) => setDepartment(e.target.value)}
-                  className={inputClass}
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-slate-600 mb-1">ครูสาขาวิชา</label>
-                <input
-                  value={supervisingTeacher}
-                  onChange={(e) => setSupervisingTeacher(e.target.value)}
-                  className={inputClass}
-                />
-              </div>
-            </div>
+            )}
             <div>
               <label className="block text-xs font-medium text-slate-600 mb-1">รายละเอียดการซ่อม</label>
               <textarea
