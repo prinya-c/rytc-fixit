@@ -92,14 +92,15 @@ export default function RepairStatus() {
     }
   }
 
-  /** เลือกช่างซ่อมจากรายชื่อที่จัดการไว้ที่ /technicians — เติมชื่อ/สาขาวิชาให้อัตโนมัติ (ยัง
-   * แก้ไขเป็นข้อความเองต่อได้ตามปกติ เผื่อกรณีคนที่ซ่อมจริงยังไม่มีในทะเบียน) */
+  /** เลือกช่างซ่อมจากรายชื่อที่จัดการไว้ที่ /technicians — เติมชื่อ/สาขาวิชา/เลขบัตรประชาชน (ถ้ามี)
+   * ให้อัตโนมัติ (ยังแก้ไขเป็นข้อความเองต่อได้ตามปกติ เผื่อกรณีคนที่ซ่อมจริงยังไม่มีในทะเบียน) */
   function handleTechnicianSelect(techId) {
     setTechnicianId(techId)
     const tech = technicians.find((t) => t.id === techId)
     if (tech) {
       setTechnicianName(tech.fullName)
       setDepartment(tech.deptName)
+      if (tech.nationalId) setTechnicianNationalId(tech.nationalId)
     }
   }
 

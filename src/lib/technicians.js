@@ -15,10 +15,11 @@ export function subscribeTechnicians(callback) {
   return onSnapshot(q, (snap) => callback(snap.docs.map((d) => ({ id: d.id, ...d.data() }))))
 }
 
-export async function createTechnician({ fullName, phone, position, positionName, dept, deptName }) {
+export async function createTechnician({ fullName, phone, nationalId, position, positionName, dept, deptName }) {
   await addDoc(collection(db, TECHNICIANS), {
     fullName: fullName.trim(),
     phone: phone.trim(),
+    nationalId: nationalId || null,
     position,
     positionName,
     dept,
@@ -28,10 +29,11 @@ export async function createTechnician({ fullName, phone, position, positionName
   })
 }
 
-export async function updateTechnician(id, { fullName, phone, position, positionName, dept, deptName }) {
+export async function updateTechnician(id, { fullName, phone, nationalId, position, positionName, dept, deptName }) {
   await updateDoc(doc(db, TECHNICIANS, id), {
     fullName: fullName.trim(),
     phone: phone.trim(),
+    nationalId: nationalId || null,
     position,
     positionName,
     dept,

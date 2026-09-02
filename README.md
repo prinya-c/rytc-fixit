@@ -103,6 +103,7 @@ technicians/{id}                     // โปรไฟล์ช่างซ่�
                                       // /technicians — คนละเรื่องกับ staff/{uid} ไม่ผูกกับบัญชี
                                       // Auth ใดๆ
   fullName, phone: string
+  nationalId?: string           // ไม่บังคับกรอก
   position: string             // doc id จาก collection position (denormalize positionName ไว้ด้วย)
   positionName: string
   dept: string                 // doc id จาก collection dept (denormalize deptName ไว้ด้วย)

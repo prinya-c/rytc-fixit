@@ -5,7 +5,7 @@ import { createTechnician, deleteTechnician, subscribeTechnicians, updateTechnic
 const inputClass =
   'w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary'
 
-const emptyForm = { fullName: '', phone: '', positionId: '', deptId: '' }
+const emptyForm = { fullName: '', phone: '', nationalId: '', positionId: '', deptId: '' }
 
 /** จัดการโปรไฟล์ช่างซ่อม (ผู้ลงมือซ่อมจริง — นักเรียน/นักศึกษา) ใช้เลือกในหน้าอัปเดตสถานะขั้น
  * "ตรวจสอบคุณภาพ" แทนการพิมพ์ชื่อ/สาขาวิชาเอง (ดู technicians.js, RepairStatus.jsx) */
@@ -26,7 +26,13 @@ export default function TechnicianList() {
 
   function startEdit(tech) {
     setEditingId(tech.id)
-    setForm({ fullName: tech.fullName, phone: tech.phone, positionId: tech.position, deptId: tech.dept })
+    setForm({
+      fullName: tech.fullName,
+      phone: tech.phone,
+      nationalId: tech.nationalId || '',
+      positionId: tech.position,
+      deptId: tech.dept,
+    })
     setError('')
   }
 
@@ -50,6 +56,7 @@ export default function TechnicianList() {
       const payload = {
         fullName: form.fullName,
         phone: form.phone,
+        nationalId: form.nationalId || null,
         position: form.positionId,
         positionName: position?.name ?? '',
         dept: form.deptId,
@@ -104,6 +111,18 @@ export default function TechnicianList() {
             <input
               value={form.phone}
               onChange={(e) => setForm({ ...form, phone: e.target.value })}
+              className={inputClass}
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-slate-600 mb-1">
+              เลขบัตรประชาชน <span className="text-slate-400 font-normal">(ไม่บังคับ)</span>
+            </label>
+            <input
+              value={form.nationalId}
+              onChange={(e) => setForm({ ...form, nationalId: e.target.value.replace(/\D/g, '') })}
+              inputMode="numeric"
+              maxLength={13}
               className={inputClass}
             />
           </div>
@@ -173,6 +192,7 @@ export default function TechnicianList() {
               <p className="font-semibold text-slate-800">{tech.fullName}</p>
               <p className="text-xs text-slate-500">
                 {tech.positionName} · {tech.deptName} · โทร {tech.phone}
+                {tech.nationalId && ` · เลขบัตรประชาชน ${tech.nationalId}`}
               </p>
             </div>
             <div className="flex gap-2">
