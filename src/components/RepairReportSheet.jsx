@@ -78,6 +78,9 @@ export default function RepairReportSheet({ repair, logs, currentStaffName }) {
   // (แก้ไขด้วยลายมือหน้างานได้ถ้าคนมารับจริงเป็นคนอื่น) พอกดปิดงานจริงจะใช้ชื่อจาก closure แทน
   const receiverName = repair.closure?.receiverName || repair.requester?.fullName || '-'
   const closedByName = repair.closure?.closedByName || currentStaffName || '-'
+  const closedDate = repair.closure?.closedAt
+    ? fmtDate(repair.closure.closedAt)
+    : new Date().toLocaleDateString('th-TH', { dateStyle: 'medium' })
 
   return (
     <div className="p-[15mm] text-[13px] leading-snug text-slate-900">
@@ -186,12 +189,12 @@ export default function RepairReportSheet({ repair, logs, currentStaffName }) {
         <div>
           <p>ผู้รับเครื่อง...........................................</p>
           <p className="mt-1">({receiverName})</p>
-          <p>วันที่ {fmtDate(repair.closure?.closedAt)}</p>
+          <p>วันที่ {closedDate}</p>
         </div>
         <div>
           <p>ผู้ส่งมอบเครื่อง...........................................</p>
           <p className="mt-1">({closedByName})</p>
-          <p>วันที่ {fmtDate(repair.closure?.closedAt)}</p>
+          <p>วันที่ {closedDate}</p>
         </div>
       </div>
     </div>
