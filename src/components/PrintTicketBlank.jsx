@@ -1,6 +1,16 @@
 import { FIXIT_LOGO, RYTC_LOGO } from '../lib/assets'
+import { ITEM_CATEGORIES } from '../lib/options'
 
-const BLANK = '.......................................................'
+/** บรรทัดกรอกมือ: label ชิดซ้าย ส่วนเส้นประยืดเต็มที่เหลือ ทำให้ปลายเส้นประของทุกบรรทัดชิดขอบ
+ * ขวาเท่ากันเสมอ ไม่ว่า label จะยาวสั้นแค่ไหน (ต่างจากพิมพ์จุดไข่ปลาจำนวนคงที่ที่ปลายเยื้องกัน) */
+function BlankLine({ label }) {
+  return (
+    <p className="flex items-end gap-1">
+      <span className="shrink-0">{label}</span>
+      <span className="flex-1 border-b border-dotted border-slate-400">&nbsp;</span>
+    </p>
+  )
+}
 
 /** ใบลงทะเบียนเปล่า ไม่ผูกกับรายการซ่อมใด ๆ — ให้เจ้าหน้าที่กรอกด้วยมือหน้างาน (เช่นตอนคิวยาว
  * ไฟดับ หรือยังไม่สะดวกลงทะเบียนในระบบทันที) ทุกช่องเป็นเส้นประให้กรอกเอง ตรงกับโครงของ
@@ -20,26 +30,31 @@ export default function PrintTicketBlank({ contactQrDataUrl }) {
         </div>
       </div>
 
-      <div>
+      <div className="space-y-1">
         <p className="font-semibold text-base mb-0.5">ผู้ขอรับบริการ</p>
-        <p>ชื่อ-นามสกุล: {BLANK}</p>
-        <p>เลขบัตรประชาชน: {BLANK}</p>
-        <p>โทรศัพท์: {BLANK}</p>
+        <BlankLine label="ชื่อ-นามสกุล:" />
+        <BlankLine label="เลขบัตรประชาชน:" />
+        <BlankLine label="โทรศัพท์:" />
       </div>
 
-      <div>
+      <div className="space-y-1">
         <p className="font-semibold text-base mb-0.5">สิ่งของที่นำมาซ่อม</p>
-        <p>ประเภท: {BLANK}</p>
-        <p>สิ่งที่ส่งซ่อม: {BLANK}</p>
-        <p>ยี่ห้อ: {BLANK}</p>
-        <p>รุ่น: {BLANK}</p>
-        <p>เลขทะเบียนรถ: {BLANK}</p>
+        <p>ประเภท:</p>
+        <div className="flex flex-wrap gap-x-3 gap-y-0.5">
+          {ITEM_CATEGORIES.map((c) => (
+            <span key={c.value}>☐ {c.label}</span>
+          ))}
+        </div>
+        <BlankLine label="สิ่งที่ส่งซ่อม:" />
+        <BlankLine label="ยี่ห้อ:" />
+        <BlankLine label="รุ่น:" />
+        <BlankLine label="เลขทะเบียนรถ:" />
       </div>
 
-      <div>
+      <div className="space-y-1">
         <p className="font-semibold text-base mb-0.5">เจ้าหน้าที่รับลงทะเบียน</p>
-        <p>ชื่อ-นามสกุล: {BLANK}</p>
-        <p>โทรศัพท์: {BLANK}</p>
+        <BlankLine label="ชื่อ-นามสกุล:" />
+        <BlankLine label="โทรศัพท์:" />
       </div>
 
       <div className="mt-auto pt-2 border-t border-slate-200 flex items-center gap-2">
@@ -50,9 +65,12 @@ export default function PrintTicketBlank({ contactQrDataUrl }) {
           หรือโทรสอบถามได้ที่เจ้าหน้าที่รับลงทะเบียน
         </p>
       </div>
-      <div className="flex items-end justify-between">
-        <p className="text-[10px] text-slate-400">รหัสรายการ: {BLANK}</p>
-        <img src={RYTC_LOGO} alt="Rayong Technical College" className="h-5 object-contain" />
+      <div className="flex items-end justify-between gap-3">
+        <p className="text-[10px] text-slate-400 flex items-end gap-1 flex-1">
+          <span className="shrink-0">รหัสรายการ:</span>
+          <span className="flex-1 border-b border-dotted border-slate-400">&nbsp;</span>
+        </p>
+        <img src={RYTC_LOGO} alt="Rayong Technical College" className="h-5 object-contain shrink-0" />
       </div>
     </div>
   )
