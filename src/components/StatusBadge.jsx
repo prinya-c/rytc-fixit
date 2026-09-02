@@ -8,9 +8,17 @@ const STATUS_COLORS = {
   1: 'bg-slate-100 text-slate-700',
   2: 'bg-indigo-100 text-indigo-700',
   3: 'bg-cyan-100 text-cyan-700',
+  // 4/5/6 เดิม (ไม่มีทศนิยม) เก็บไว้ให้ badge ของรายการเก่าก่อนแยกสถานะรอคิว/กำลังซ่อมยังมีสีถูกต้อง
   4: 'bg-orange-100 text-orange-700',
   5: 'bg-amber-100 text-amber-800',
   6: 'bg-yellow-100 text-yellow-800',
+  // .1 รอคิว ใช้โทนอ่อนกว่า .2 กำลังซ่อม (สีเข้ม) ของสถานีเดียวกัน
+  4.1: 'bg-orange-50 text-orange-600',
+  4.2: 'bg-orange-100 text-orange-700',
+  5.1: 'bg-amber-50 text-amber-700',
+  5.2: 'bg-amber-100 text-amber-800',
+  6.1: 'bg-yellow-50 text-yellow-700',
+  6.2: 'bg-yellow-100 text-yellow-800',
   7: 'bg-purple-100 text-purple-700',
   8: 'bg-teal-100 text-teal-700',
   9: 'bg-rose-100 text-rose-700',

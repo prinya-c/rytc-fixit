@@ -60,9 +60,11 @@ function NumberedLines({ items }) {
   ))
 }
 
-/** หาช่วงเวลาซ่อม/ผู้ตรวจเช็คจากประวัติ statusLogs — ไม่มีฟิลด์แยกเก็บ ใช้ log ที่มีอยู่แทน */
+/** หาช่วงเวลาซ่อม/ผู้ตรวจเช็คจากประวัติ statusLogs — ไม่มีฟิลด์แยกเก็บ ใช้ log ที่มีอยู่แทน
+ * นับเฉพาะตอน "กำลังซ่อม" จริง (4.2/5.2/6.2) ไม่นับตอนแค่รอคิว (4.1/5.1/6.1) — คง 4/5/6 เดิม
+ * (ไม่มีทศนิยม) ไว้ด้วยเพื่อรายการเก่าก่อนแยกสถานะรอคิว/กำลังซ่อม ยังหาวันที่เริ่มซ่อมได้ถูกต้อง */
 function findRepairStart(logs) {
-  const repairLogs = logs.filter((l) => [4, 5, 6].includes(l.status))
+  const repairLogs = logs.filter((l) => [4, 5, 6, 4.2, 5.2, 6.2].includes(l.status))
   if (repairLogs.length === 0) return null
   return repairLogs.reduce((earliest, l) => {
     const t = l.changedAt?.toMillis?.() ?? Infinity

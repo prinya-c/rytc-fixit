@@ -29,8 +29,16 @@ function categoryLabel(item) {
   return cat
 }
 
+// สถานะ 4/5/6 แต่ละสถานีแยกเป็น .1 รอคิว → .2 กำลังซ่อม → 7 ตรวจสอบคุณภาพ ไม่ใช่ +1 ธรรมดา
+// เหมือนช่วงอื่น (ดูที่มาเลขทศนิยมใน options.js) — ใช้ map เทียบตรงๆ แทนการบวกเลขทศนิยม
+// (4.1 + 0.1 ใน JS ได้ 4.199999999999999 ไม่เท่ากับ 4.2 พอดีเป๊ะ)
+const NEXT_QUEUE_STATUS = { 4.1: 4.2, 5.1: 5.2, 6.1: 6.2 }
 function defaultNextStatus(repair) {
   if (repair.status === 3) return suggestRepairStatus(repair.item)
+  if (repair.status in NEXT_QUEUE_STATUS) return NEXT_QUEUE_STATUS[repair.status]
+  // 4/5/6 เดิม (ไม่มีทศนิยม, ก่อนแยกรอคิว/กำลังซ่อม) ถือว่ากำลังซ่อมอยู่แล้ว ข้ามไปตรวจสอบ
+  // คุณภาพต่อได้เลย เหมือน .2 ของสถานีเดียวกัน
+  if ([4, 5, 6, 4.2, 5.2, 6.2].includes(repair.status)) return 7
   return Math.min(repair.status + 1, 8)
 }
 
