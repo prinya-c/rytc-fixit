@@ -3,8 +3,9 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import PhotoLightbox from '../components/PhotoLightbox'
 import PhotoOrPending from '../components/PhotoOrPending'
 import StatusBadge from '../components/StatusBadge'
+import { useAuth } from '../context/AuthContext'
 import { clearPendingForRepair } from '../lib/offlineQueue'
-import { deleteRepair, subscribeRepair, subscribeStatusLogs } from '../lib/repairs'
+import { deleteRepair, reopenRepair, subscribeRepair, subscribeStatusLogs } from '../lib/repairs'
 import { ITEM_CATEGORIES, VEHICLE_TYPES } from '../lib/options'
 
 const INTAKE_SLOTS = ['item1', 'item2', 'person']
@@ -38,9 +39,11 @@ function Section({ title, children }) {
 export default function RepairDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
+  const { user, staffProfile } = useAuth()
   const [repair, setRepair] = useState(undefined)
   const [logs, setLogs] = useState([])
   const [deleting, setDeleting] = useState(false)
+  const [reopening, setReopening] = useState(false)
   const [lightboxUrl, setLightboxUrl] = useState(null)
 
   useEffect(() => subscribeRepair(id, setRepair), [id])
@@ -56,6 +59,23 @@ export default function RepairDetail() {
     } catch (err) {
       window.alert(err.message || 'ลบไม่สำเร็จ')
       setDeleting(false)
+    }
+  }
+
+  async function handleReopen() {
+    if (
+      !window.confirm(
+        'ยืนยันยกเลิกการปิดงาน/ส่งมอบ? สถานะจะย้อนกลับไปก่อนปิดงาน และข้อมูลผู้รับคืน/รูปตอนปิดงานจะถูกล้างทิ้ง (ต้องกรอกใหม่ตอนปิดงานอีกครั้ง)',
+      )
+    )
+      return
+    setReopening(true)
+    try {
+      await reopenRepair(id, { staffUid: user.uid, staffName: staffProfile.fullName })
+    } catch (err) {
+      window.alert(err.message || 'ยกเลิกไม่สำเร็จ')
+    } finally {
+      setReopening(false)
     }
   }
 
@@ -91,12 +111,23 @@ export default function RepairDetail() {
           >
             อัปเดตสถานะ
           </Link>
-          <Link
-            to={`/repairs/${id}/close`}
-            className="rounded-md border border-success text-success px-3 py-2 text-sm font-medium hover:bg-green-50"
-          >
-            ปิดงาน/ส่งมอบ
-          </Link>
+          {repair.status === 10 ? (
+            <button
+              type="button"
+              onClick={handleReopen}
+              disabled={reopening}
+              className="rounded-md border border-danger text-danger px-3 py-2 text-sm font-medium hover:bg-red-50 disabled:opacity-60"
+            >
+              {reopening ? 'กำลังยกเลิก...' : 'ยกเลิกปิดงาน/ส่งมอบ'}
+            </button>
+          ) : (
+            <Link
+              to={`/repairs/${id}/close`}
+              className="rounded-md border border-success text-success px-3 py-2 text-sm font-medium hover:bg-green-50"
+            >
+              ปิดงาน/ส่งมอบ
+            </Link>
+          )}
         </div>
 
         <div className="flex flex-wrap gap-2 pt-3 border-t border-slate-200">

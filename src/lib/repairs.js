@@ -514,6 +514,34 @@ export async function closeRepair(repairId, { itemPhoto, personPhoto, receiverNa
   })
 }
 
+/**
+ * ยกเลิกการปิดงาน/ส่งมอบ (undo closeRepair) — ใช้ตอนกดผิด/กรอกข้อมูลผู้รับคืนผิดแล้วต้องแก้ไข
+ * ใหม่ ย้อนสถานะกลับไปก่อนปิดงาน (9 ถ้า unrepairable, ไม่งั้น 8) และล้าง closure ทิ้ง (ไม่เก็บรูป/
+ * ชื่อผู้รับคืนเดิมไว้ค้าง เพราะจะสับสนกับตอนปิดงานใหม่ภายหลัง — ประวัติการยกเลิกยังอยู่ใน
+ * statusLogs ผ่าน changeRepairStatus อยู่แล้ว) เรียกจากปุ่ม "ยกเลิกปิดงาน/ส่งมอบ" ในหน้ารายละเอียด
+ * เฉพาะตอนสถานะเป็น 10 เท่านั้น
+ */
+export async function reopenRepair(repairId, { staffUid, staffName }) {
+  const ref = doc(db, REPAIRS, repairId)
+  const snap = await getDoc(ref)
+  if (!snap.exists()) throw new Error('ไม่พบรายการนี้')
+  const current = snap.data()
+  const revertStatus = current.unrepairable ? 9 : 8
+
+  await awaitIfOnline(
+    updateDoc(ref, {
+      closure: null,
+      updatedAt: serverTimestamp(),
+    }),
+  )
+  await changeRepairStatus(repairId, {
+    newStatus: revertStatus,
+    note: 'ยกเลิกการปิดงาน/ส่งมอบ',
+    staffUid,
+    staffName,
+  })
+}
+
 /** ลบรายการลงทะเบียน (แก้ไขข้อมูลผิดพลาด) — ลบเอกสาร, log, รูปใน Storage, และปรับสถิติ */
 export async function deleteRepair(repairId) {
   const ref = doc(db, REPAIRS, repairId)
