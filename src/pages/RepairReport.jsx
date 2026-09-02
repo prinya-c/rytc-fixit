@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import RepairReportSheet from '../components/RepairReportSheet'
+import { useAuth } from '../context/AuthContext'
 import { subscribeRepair, subscribeStatusLogs } from '../lib/repairs'
 
 export default function RepairReport() {
   const { id } = useParams()
   const navigate = useNavigate()
+  const { staffProfile } = useAuth()
   const [repair, setRepair] = useState(undefined)
   const [logs, setLogs] = useState([])
 
@@ -56,7 +58,7 @@ export default function RepairReport() {
           ใบรายงานจริง 210mm กว้างกว่าจอมือถือทุกรุ่น ต้องเลื่อนดูในกรอบนี้แทน */}
       <div className="print-preview-scroll">
         <div className="mx-auto w-[210mm] min-h-[297mm] bg-white">
-          <RepairReportSheet repair={repair} logs={logs} />
+          <RepairReportSheet repair={repair} logs={logs} currentStaffName={staffProfile?.fullName} />
         </div>
       </div>
     </div>

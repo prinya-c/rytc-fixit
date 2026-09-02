@@ -71,8 +71,13 @@ function findRepairStart(logs) {
   }, repairLogs[0])
 }
 
-export default function RepairReportSheet({ repair, logs }) {
+export default function RepairReportSheet({ repair, logs, currentStaffName }) {
   const repairStartLog = findRepairStart(logs)
+  // สถานะ 8 (ซ่อมเสร็จแล้ว/รอส่งมอบ) ยังไม่มี closure เพราะยังไม่ได้กดปิดงานจริง — ใบนี้มักพิมพ์
+  // เตรียมไว้ล่วงหน้าก่อนส่งมอบ จึงใช้ชื่อผู้ขอรับบริการ/เจ้าหน้าที่ที่กำลังพิมพ์อยู่ตอนนี้แทนไปก่อน
+  // (แก้ไขด้วยลายมือหน้างานได้ถ้าคนมารับจริงเป็นคนอื่น) พอกดปิดงานจริงจะใช้ชื่อจาก closure แทน
+  const receiverName = repair.closure?.receiverName || repair.requester?.fullName || '-'
+  const closedByName = repair.closure?.closedByName || currentStaffName || '-'
 
   return (
     <div className="p-[15mm] text-[13px] leading-snug text-slate-900">
@@ -180,12 +185,12 @@ export default function RepairReportSheet({ repair, logs }) {
       <div className="flex justify-between mt-10 px-4 text-center">
         <div>
           <p>ผู้รับเครื่อง...........................................</p>
-          <p className="mt-1">({repair.closure?.receiverName || '-'})</p>
+          <p className="mt-1">({receiverName})</p>
           <p>วันที่ {fmtDate(repair.closure?.closedAt)}</p>
         </div>
         <div>
           <p>ผู้ส่งมอบเครื่อง...........................................</p>
-          <p className="mt-1">({repair.closure?.closedByName || '-'})</p>
+          <p className="mt-1">({closedByName})</p>
           <p>วันที่ {fmtDate(repair.closure?.closedAt)}</p>
         </div>
       </div>
