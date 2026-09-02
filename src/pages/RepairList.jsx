@@ -38,7 +38,14 @@ export default function RepairList() {
   return (
     <div className="max-w-6xl mx-auto px-4 py-6 space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-xl font-bold text-slate-800">รายการงานซ่อม</h1>
+        <div>
+          <h1 className="text-xl font-bold text-slate-800">รายการงานซ่อม</h1>
+          {/* จอมือถือไม่มีเมนู "ช่างซ่อม" ในหัวจอ (ซ่อนไว้เหมือนเมนูอื่นบน Navbar.jsx) จุดนี้เลย
+              เป็นทางเดียวที่มือถือเข้าถึงหน้าจัดการช่างซ่อมได้ — จึงแสดงทุกขนาดจอ ไม่ซ่อนบนมือถือ */}
+          <Link to="/technicians" className="text-xs text-primary hover:underline">
+            จัดการช่างซ่อม
+          </Link>
+        </div>
         {/* ซ่อนเฉพาะจอมือถือ — ซ้ำกับแท็บ "ลงทะเบียนใหม่" ใน BottomTabBar.jsx ที่โชว์คู่กันตลอด
             จอ sm ขึ้นไปไม่มีแถบเมนูล่าง ปุ่มนี้ยังเป็นทางเดียวที่สะดวกสุดในหน้านี้ */}
         <Link

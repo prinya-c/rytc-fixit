@@ -7,8 +7,8 @@
 รักษาเบื้องต้น
 
 สร้างด้วย Vite + React + Tailwind CSS เก็บข้อมูลใน Firebase Firestore (database `fixit`)
-และรูปถ่ายใน Firebase Storage ใช้ Firebase Auth (Google Sign-In จำกัดเฉพาะบัญชี
-`@technicrayong.ac.th`) สำหรับเจ้าหน้าที่
+และรูปถ่ายใน Firebase Storage ใช้ Firebase Auth (Google Sign-In — บัญชีใดก็ได้ ไม่จำกัดโดเมน)
+สำหรับเจ้าหน้าที่
 
 ## การทำงานของแอป
 
@@ -36,6 +36,10 @@
 9. **สแกน QR เพื่อดูสถานะ** (`/scan-status`, **หน้าสาธารณะ**) — ใช้ QR ใบเดียวกับที่เจ้าหน้าที่ใช้
    (อันบนบนใบลงทะเบียน) สแกนแล้ว navigate ไป `/repairs/:id` ตรงๆ โดยไม่ query ข้อมูลก่อน (เพราะ
    `repairs/{id}` ปิดอ่านไว้เฉพาะเจ้าหน้าที่) ปล่อยให้หน้าปลายทางเลือกแสดงผลเองตามหัวข้อถัดไป
+10. **จัดการช่างซ่อม** (`/technicians`, ต้องล็อกอิน) — CRUD รายชื่อผู้ลงมือซ่อมจริง (เช่น
+    นักเรียน/นักศึกษา คนละกลุ่มกับเจ้าหน้าที่ที่ล็อกอินใช้แอป) เก็บชื่อ-นามสกุล/เบอร์โทร/ตำแหน่ง/
+    สาขาวิชา — ใช้เลือกในหน้าอัปเดตสถานะขั้น "ตรวจสอบคุณภาพ" (7) แทนการพิมพ์ชื่อ/สาขาวิชาเอง
+    ทุกครั้ง (เลือกแล้วยังแก้เป็นข้อความเองต่อได้ เผื่อคนที่ซ่อมจริงยังไม่มีในทะเบียน)
 
 หน้าล็อกอินเจ้าหน้าที่อยู่ที่ `/staff/login` — **ไม่มีลิงก์จากหน้าไหนไปหาโดยตรง** ต้องพิมพ์ URL เอง
 ตามที่ตกลงกันไว้ว่าไม่ต้องการให้ Dashboard ที่เปิดสาธารณะโชว์ลิงก์ล็อกอิน
@@ -95,6 +99,16 @@ dept/{id}                            // ข้อมูลอ้างอิง�
 position/{id}                        // เช่นเดียวกับ dept — doc id เป็นรหัสตำแหน่ง เช่น "1001"
   "staff-position": string
 
+technicians/{id}                     // โปรไฟล์ช่างซ่อม (ผู้ลงมือซ่อมจริง) จัดการผ่านหน้า
+                                      // /technicians — คนละเรื่องกับ staff/{uid} ไม่ผูกกับบัญชี
+                                      // Auth ใดๆ
+  fullName, phone: string
+  position: string             // doc id จาก collection position (denormalize positionName ไว้ด้วย)
+  positionName: string
+  dept: string                 // doc id จาก collection dept (denormalize deptName ไว้ด้วย)
+  deptName: string
+  createdAt, updatedAt: timestamp
+
 repairs/{repairId}                   // doc id = "{เลขบัตรประชาชนผู้ขอรับบริการ}-dd-mm-yyyy-HH-mm-ss"
                                       // (เวลาเครื่อง ณ ตอนกดบันทึก) ดู buildRepairId() ใน repairs.js
   requester: { fullName, nationalId, phone,
@@ -114,9 +128,11 @@ repairs/{repairId}                   // doc id = "{เลขบัตรปร�
   unrepairable: boolean
   unrepairableReason?, unrepairableNote?: string
   assessment?: { inspectionNotes, damageLevel, causeNote?, assessedByUid, assessedByName, assessedAt }
-  qualityCheck?: { technicianName, technicianNationalId?, department?, supervisingTeacher?,
-                    repairDetails?, checkedByUid, checkedByName, checkedAt }
+  qualityCheck?: { technicianId?, technicianName, technicianNationalId?, department?,
+                    supervisingTeacher?, repairDetails?, checkedByUid, checkedByName, checkedAt }
                  // กรอกตอนอัปเดตสถานะเป็น "ตรวจสอบคุณภาพ" (7) — ใช้พิมพ์ใบรายงานซ่อม
+                 // technicianId อ้างอิง technicians/{id} ถ้าเลือกจากทะเบียน (ดู /technicians)
+                 // technicianName/department denormalize ไว้เสมอไม่ว่าจะเลือกจากทะเบียนหรือพิมพ์เอง
   closure?: { itemPhoto, personPhoto, receiverName, receiverRelation?, closedByUid,
               closedByName, closedAt }
   createdAt, updatedAt: timestamp
@@ -204,15 +220,13 @@ stats/summary                        // doc เดียว, อ่านได�
    firebase firestore:databases:create fixit --project rytc-app --location <region>
    ```
 2. **เปิด Firebase Authentication → Sign-in method → Google** (โปรเจกต์นี้ยังไม่เคยเปิด
-   Auth มาก่อน) — ไม่ต้องสร้างบัญชีเจ้าหน้าที่ทีละคนใน Console เพราะแอปจำกัดสิทธิ์ด้วย
-   โดเมนอีเมลแทน (ดูข้อ 3)
-3. **การจำกัดสิทธิ์เจ้าหน้าที่**: แอปอนุญาตเฉพาะบัญชี Google ที่ลงท้ายด้วย
-   `@technicrayong.ac.th` เท่านั้น (เช็คทั้งฝั่ง client ใน `src/context/AuthContext.jsx`
-   และบังคับจริงอีกชั้นใน `firestore.rules`/`storage.rules` ผ่าน
-   `request.auth.token.email.matches(...)`) ใครก็ตามที่มีบัญชีโดเมนนี้ล็อกอินเข้าระบบได้ทันที
-   โดยไม่ต้องให้แอดมินสร้างบัญชีล่วงหน้า — ถ้าต้องการจำกัดเฉพาะบุคคลที่คัดเลือกไว้ (ไม่ใช่ทั้งโดเมน)
-   ต้องปรับ `isStaff()` ใน `firestore.rules` และเงื่อนไขใน `storage.rules` เพิ่มเป็น allow-list
-   รายอีเมลแทน
+   Auth มาก่อน) — ไม่ต้องสร้างบัญชีเจ้าหน้าที่ทีละคนใน Console เพราะแอปไม่จำกัดโดเมน (ดูข้อ 3)
+3. **สิทธิ์เจ้าหน้าที่**: แอปอนุญาตให้ล็อกอินด้วยบัญชี Google **ใดก็ได้** ไม่จำกัดโดเมน — ยืนยันกับ
+   ผู้ใช้แล้วว่าต้องการแบบเปิดกว้าง ไม่มีขั้นตอนอนุมัติ (ดู `src/context/AuthContext.jsx`) ล็อกอิน
+   ครั้งแรกกรอกโปรไฟล์เอง (`completeProfile()`) แล้วได้สิทธิ์เจ้าหน้าที่ทันที — `firestore.rules`/
+   `storage.rules` เช็คแค่ `request.auth != null` (ไม่มีการเช็คโดเมนอีเมลแล้ว) ถ้าต้องการจำกัด
+   เฉพาะบุคคลที่คัดเลือกไว้ในอนาคต ต้องปรับ `isStaff()` ใน `firestore.rules` และเงื่อนไขใน
+   `storage.rules` เพิ่มเป็น allow-list รายอีเมลหรือเพิ่มขั้นตอนอนุมัติเอง
 4. **Deploy Security Rules** (Firestore + Storage):
    ```bash
    firebase deploy --only firestore:rules,storage --project rytc-app

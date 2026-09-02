@@ -35,6 +35,9 @@ export default function Navbar() {
             <NavLink to="/scan" className={navLinkClass}>
               สแกน QR
             </NavLink>
+            <NavLink to="/technicians" className={navLinkClass}>
+              ช่างซ่อม
+            </NavLink>
           </nav>
         )}
 

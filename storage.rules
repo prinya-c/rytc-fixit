@@ -70,12 +70,12 @@ service firebase.storage {
     // --- prinya-c/rytc-fixit (this app) ---
 
     // Photos under fixit/{repairId}/... include images of requesters and
-    // staff, so read/write is restricted to @technicrayong.ac.th staff
-    // accounts (Google Sign-In) — matches the isStaff() check in
-    // firestore.rules.
+    // staff, so read/write is restricted to authenticated accounts — any
+    // Google account, no email-domain restriction (matches the isStaff()
+    // check in firestore.rules; see AuthContext.jsx for the product
+    // decision behind dropping the @technicrayong.ac.th requirement).
     match /fixit/{repairId}/{allPaths=**} {
-      allow read, write: if request.auth != null
-        && request.auth.token.email.matches('.*@technicrayong[.]ac[.]th$');
+      allow read, write: if request.auth != null;
     }
 
     // Anything not explicitly matched above is denied.

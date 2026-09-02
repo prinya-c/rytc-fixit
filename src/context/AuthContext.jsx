@@ -3,16 +3,11 @@ import { GoogleAuthProvider, onAuthStateChanged, signInWithPopup, signOut } from
 import { doc, getDoc, serverTimestamp, setDoc } from 'firebase/firestore'
 import { auth, db } from '../lib/firebase'
 
-// จำกัดให้เฉพาะบัญชี Google ของวิทยาลัยเท่านั้นที่ล็อกอินเข้าระบบเจ้าหน้าที่ได้
-// (บังคับใช้จริงอีกชั้นใน firestore.rules ด้วย เพราะฝั่ง client เลี่ยงได้)
-const ALLOWED_EMAIL_DOMAIN = 'technicrayong.ac.th'
-
+// เปิดให้ล็อกอินด้วยบัญชี Google ใดก็ได้ (ไม่จำกัดเฉพาะโดเมนวิทยาลัยอีกต่อไป) — ล็อกอินครั้งแรก
+// จะพาไปกรอกโปรไฟล์เจ้าหน้าที่เอง (ดู completeProfile ด้านล่าง) แล้วได้สิทธิ์เจ้าหน้าที่ทันที
+// ไม่มีขั้นตอนอนุมัติ (ยืนยันกับผู้ใช้แล้วว่าต้องการแบบนี้) — Firestore rules เปิดให้ทุกบัญชีที่
+// ล็อกอินแล้วเช่นกัน (ดู isStaff() ใน firestore.rules)
 const googleProvider = new GoogleAuthProvider()
-googleProvider.setCustomParameters({ hd: ALLOWED_EMAIL_DOMAIN })
-
-function isAllowedEmail(email) {
-  return !!email && email.toLowerCase().endsWith(`@${ALLOWED_EMAIL_DOMAIN}`)
-}
 
 const AuthContext = createContext(null)
 
@@ -23,15 +18,6 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      // บังคับโดเมนอีเมลซ้ำที่นี่ด้วย (ไม่ใช่แค่ตอน login()) เผื่อ session เก่าค้างอยู่
-      // หรือ hd hint ถูกเลี่ยงตอนเลือกบัญชีใน popup
-      if (firebaseUser && !isAllowedEmail(firebaseUser.email)) {
-        await signOut(auth)
-        setUser(null)
-        setStaffProfile(null)
-        setLoading(false)
-        return
-      }
       setUser(firebaseUser)
       if (firebaseUser) {
         const snap = await getDoc(doc(db, 'staff', firebaseUser.uid))
@@ -45,11 +31,7 @@ export function AuthProvider({ children }) {
   }, [])
 
   async function login() {
-    const result = await signInWithPopup(auth, googleProvider)
-    if (!isAllowedEmail(result.user.email)) {
-      await signOut(auth)
-      throw new Error(`ใช้ได้เฉพาะบัญชี Google ของวิทยาลัย (@${ALLOWED_EMAIL_DOMAIN}) เท่านั้น`)
-    }
+    await signInWithPopup(auth, googleProvider)
   }
 
   async function logout() {

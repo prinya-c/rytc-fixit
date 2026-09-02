@@ -4,6 +4,7 @@ import PhotoLightbox from '../components/PhotoLightbox'
 import PhotoOrPending from '../components/PhotoOrPending'
 import { useAuth } from '../context/AuthContext'
 import { changeRepairStatus, saveQualityCheck, subscribeRepair } from '../lib/repairs'
+import { subscribeTechnicians } from '../lib/technicians'
 import {
   ITEM_CATEGORIES,
   STATUSES_SELECTABLE,
@@ -49,11 +50,13 @@ export default function RepairStatus() {
   const [lightboxUrl, setLightboxUrl] = useState(null)
 
   // ฟิลด์เพิ่มเติมสำหรับใบรายงานซ่อม — กรอกเฉพาะตอนย้ายไปสถานะ "ตรวจสอบคุณภาพ" (7)
+  const [technicianId, setTechnicianId] = useState('')
   const [technicianName, setTechnicianName] = useState('')
   const [technicianNationalId, setTechnicianNationalId] = useState('')
   const [department, setDepartment] = useState('')
   const [supervisingTeacher, setSupervisingTeacher] = useState('')
   const [repairDetails, setRepairDetails] = useState('')
+  const [technicians, setTechnicians] = useState([])
 
   useEffect(() => {
     const unsub = subscribeRepair(id, (data) => {
@@ -66,6 +69,9 @@ export default function RepairStatus() {
     })
     return unsub
   }, [id])
+
+  // รายชื่อช่างซ่อม (จัดการที่ /technicians) ใช้เลือกให้เติมชื่อ/สาขาวิชาให้อัตโนมัติด้านล่าง
+  useEffect(() => subscribeTechnicians(setTechnicians), [])
 
   if (repair === undefined) return <p className="text-center text-slate-400 py-10">กำลังโหลด...</p>
   if (repair === null) return <p className="text-center text-danger py-10">ไม่พบรายการนี้</p>
@@ -86,6 +92,17 @@ export default function RepairStatus() {
     }
   }
 
+  /** เลือกช่างซ่อมจากรายชื่อที่จัดการไว้ที่ /technicians — เติมชื่อ/สาขาวิชาให้อัตโนมัติ (ยัง
+   * แก้ไขเป็นข้อความเองต่อได้ตามปกติ เผื่อกรณีคนที่ซ่อมจริงยังไม่มีในทะเบียน) */
+  function handleTechnicianSelect(techId) {
+    setTechnicianId(techId)
+    const tech = technicians.find((t) => t.id === techId)
+    if (tech) {
+      setTechnicianName(tech.fullName)
+      setDepartment(tech.deptName)
+    }
+  }
+
   async function handleSubmit(e) {
     e.preventDefault()
     setError('')
@@ -93,6 +110,7 @@ export default function RepairStatus() {
     try {
       if (isQualityCheck) {
         await saveQualityCheck(id, {
+          technicianId: technicianId || null,
           technicianName,
           technicianNationalId,
           department,
@@ -184,6 +202,26 @@ export default function RepairStatus() {
             <p className="text-sm font-medium text-slate-700">
               ข้อมูลผู้ดำเนินการซ่อม/ตรวจเช็ค (สำหรับพิมพ์ใบรายงานซ่อมตอนปิดงาน)
             </p>
+            <div>
+              <label className="block text-xs font-medium text-slate-600 mb-1">เลือกช่างซ่อม</label>
+              <select
+                value={technicianId}
+                onChange={(e) => handleTechnicianSelect(e.target.value)}
+                className={inputClass}
+              >
+                <option value="">-- เลือกจากทะเบียนช่างซ่อม (หรือกรอกเองด้านล่าง) --</option>
+                {technicians.map((t) => (
+                  <option key={t.id} value={t.id}>
+                    {t.fullName} · {t.deptName}
+                  </option>
+                ))}
+              </select>
+              {technicians.length === 0 && (
+                <p className="text-xs text-slate-400 mt-1">
+                  ยังไม่มีรายชื่อในทะเบียน — เพิ่มได้ที่เมนู "ช่างซ่อม" หรือกรอกเองด้านล่างไปก่อนได้
+                </p>
+              )}
+            </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className="block text-xs font-medium text-slate-600 mb-1">ชื่อ-นามสกุล</label>

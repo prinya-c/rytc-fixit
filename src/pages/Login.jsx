@@ -69,7 +69,7 @@ export default function Login() {
           {submitting ? 'กำลังเข้าสู่ระบบ...' : 'เข้าสู่ระบบด้วย Google'}
         </button>
         <p className="text-xs text-slate-400">
-          ใช้ได้เฉพาะบัญชี Google ของวิทยาลัย (@technicrayong.ac.th) เท่านั้น
+          ใช้บัญชี Google ใดก็ได้ ล็อกอินครั้งแรกกรอกโปรไฟล์ของคุณเพื่อเริ่มใช้งาน
         </p>
       </div>
     </div>

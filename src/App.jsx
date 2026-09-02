@@ -22,6 +22,7 @@ import RepairStatus from './pages/RepairStatus'
 import RepairClose from './pages/RepairClose'
 import Scan from './pages/Scan'
 import PublicScan from './pages/PublicScan'
+import TechnicianList from './pages/TechnicianList'
 
 function withPrivate(element) {
   return <PrivateRoute>{element}</PrivateRoute>
@@ -57,6 +58,7 @@ export default function App() {
                 <Route path="/repairs/:id/status" element={withPrivate(<RepairStatus />)} />
                 <Route path="/repairs/:id/close" element={withPrivate(<RepairClose />)} />
                 <Route path="/scan" element={withPrivate(<Scan />)} />
+                <Route path="/technicians" element={withPrivate(<TechnicianList />)} />
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
             </ErrorBoundary>
