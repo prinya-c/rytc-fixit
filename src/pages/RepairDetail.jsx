@@ -137,6 +137,12 @@ export default function RepairDetail() {
           >
             🖨️ พิมพ์ใบลงทะเบียน
           </Link>
+          <Link
+            to="/print-blank"
+            className="rounded-md border border-primary text-primary px-3 py-2 text-sm font-medium hover:bg-orange-50"
+          >
+            🖨️ พิมพ์ใบลงทะเบียนเปล่า
+          </Link>
           {canPrintReport ? (
             <Link
               to={`/repairs/${id}/report`}

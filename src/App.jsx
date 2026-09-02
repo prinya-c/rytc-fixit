@@ -16,6 +16,7 @@ import RepairForm from './pages/RepairForm'
 import RepairDetailGate from './pages/RepairDetailGate'
 import RepairEdit from './pages/RepairEdit'
 import RepairPrint from './pages/RepairPrint'
+import RepairPrintBlank from './pages/RepairPrintBlank'
 import RepairReport from './pages/RepairReport'
 import RepairAssess from './pages/RepairAssess'
 import RepairStatus from './pages/RepairStatus'
@@ -53,6 +54,7 @@ export default function App() {
                 <Route path="/repairs/:id" element={<RepairDetailGate />} />
                 <Route path="/repairs/:id/edit" element={withPrivate(<RepairEdit />)} />
                 <Route path="/repairs/:id/print" element={withPrivate(<RepairPrint />)} />
+                <Route path="/print-blank" element={withPrivate(<RepairPrintBlank />)} />
                 <Route path="/repairs/:id/report" element={withPrivate(<RepairReport />)} />
                 <Route path="/repairs/:id/assess" element={withPrivate(<RepairAssess />)} />
                 <Route path="/repairs/:id/status" element={withPrivate(<RepairStatus />)} />
